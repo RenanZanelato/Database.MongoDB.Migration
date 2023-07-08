@@ -34,7 +34,7 @@ jobs:
         run: dotnet pack --configuration Release --include-source --include-symbols
 
       - name: Publish NuGet package
-        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
 
       - name: Down Docker
         run: |
