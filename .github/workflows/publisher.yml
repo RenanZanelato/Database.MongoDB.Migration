@@ -36,14 +36,9 @@ jobs:
           name: coverage-report
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
-      - name: Generate Version
-        id: version
-        run: |
-          echo "::set-output name=version::1.$(Rev:.r).0"
-
       - name: Pack NuGet package
         if: success()
-        run: dotnet pack --configuration Release --include-source --include-symbols --version 1.0.${{ steps.version.outputs.version }}
+        run: dotnet pack --configuration Release --include-source --include-symbols --version 1.$(Rev:.r).0
 
       - name: Publish NuGet package
         if: success()
