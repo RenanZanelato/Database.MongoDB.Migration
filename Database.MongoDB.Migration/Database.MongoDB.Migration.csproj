@@ -16,4 +16,8 @@
       <PackageReference Include="MongoDB.Driver" Version="2.20.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="codecov" Version="1.13.0" />
+    </ItemGroup>
+
 </Project>
