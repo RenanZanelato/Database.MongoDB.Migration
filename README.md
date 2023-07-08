@@ -1,6 +1,6 @@
 
-# MongoMigration
-MongoMigration is a simple library open-sorce that facilitates MongoDB database migration through a version-based migration system. It provides a convenient way to manage and execute MongoDB database migrations in a controlled and organized manner.
+# MongoDBMigration
+MongoDBMigration is a simple library open-sorce that facilitates MongoDB database migration through a version-based migration system. It provides a convenient way to manage and execute MongoDB database migrations in a controlled and organized manner.
 
 # Features
 * Supports multiple MongoDB instances
@@ -89,7 +89,7 @@ public class ExampleMigration : BaseMigration
     }
 }
 ```
-Now you are ready to use the MongoDB database migration system provided by MongoMigration.
+Now you are ready to use the MongoDB database migration system provided by MongoDBMigration.
 
 ## Contribution
 Contributions are welcome! If you encounter an issue, have any ideas, or want to add a new feature, feel free to open an issue or submit a pull request.
