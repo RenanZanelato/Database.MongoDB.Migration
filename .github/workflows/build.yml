@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run Tests with Docker Compose
+      - name: Build Docker Compose
         run: |
           docker-compose up -d --build
 

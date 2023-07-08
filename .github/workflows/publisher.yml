@@ -9,11 +9,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    steps:
+        steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run Tests with Docker Compose
+      - name: Build Docker Compose
         run: |
           docker-compose up -d --build
 
@@ -22,33 +22,12 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
+      - name: Install codecov
+        run: dotnet tool install -g codecov
+
       - name: Build Project
         run: |
           dotnet build --configuration Release
-          
-      - name: Run Tests
-        run: |
-          dotnet test --configuration Release --no-build
-
-      - name: Down Docker
-        run: |
-          docker-compose down
-
-  coverage:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x'
-
-      - name: Install codecov
-        run: dotnet tool install -g codecov
 
       - name: Run Code Coverage
         run: |
@@ -59,6 +38,18 @@ jobs:
         with:
           name: coverage-report
           path: ./TestResults/Coverage/
+
+      - name: Pack NuGet package
+        if: ${{ needs.coverage.result == 'success' }}
+        run: dotnet pack --configuration Release --include-source --include-symbols
+
+      - name: Publish NuGet package
+        if: ${{ needs.coverage.result == 'success' }}
+        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
+
+      - name: Down Docker
+        run: |
+          docker-compose down
 
       - name: Pack NuGet package
         if: ${{ needs.coverage.result == 'success' }}
