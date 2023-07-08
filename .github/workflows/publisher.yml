@@ -37,11 +37,9 @@ jobs:
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
       - name: Pack NuGet package
-        if: ${{ needs.coverage.result == 'success' }}
         run: dotnet pack --configuration Release --include-source --include-symbols
 
       - name: Publish NuGet package
-        if: ${{ needs.coverage.result == 'success' }}
         run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
 
       - name: Down Docker
