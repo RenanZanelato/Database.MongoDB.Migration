@@ -34,7 +34,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage-report
-          path: ./TestResults/Coverage/
+          path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
       - name: Pack NuGet package
         if: ${{ needs.coverage.result == 'success' }}
