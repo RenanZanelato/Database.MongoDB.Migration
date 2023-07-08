@@ -1,4 +1,4 @@
-name: Build and Publish
+name: Build, Test, and Publish with Coverage
 
 on:
   push:
@@ -30,12 +30,40 @@ jobs:
         run: |
           dotnet test --configuration Release --no-build
 
-      - name: Pack NuGet package
-        run: dotnet pack --configuration Release --include-source --include-symbols
-
-      - name: Publish NuGet package
-        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
-
       - name: Down Docker
         run: |
           docker-compose down
+
+  coverage:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Install codecov
+        run: dotnet tool install -g codecov
+
+      - name: Run Code Coverage
+        run: |
+          dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/Coverage/
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: ./TestResults/Coverage/
+
+      - name: Pack NuGet package
+        if: ${{ needs.coverage.result == 'success' }}
+        run: dotnet pack --configuration Release --include-source --include-symbols
+
+      - name: Publish NuGet package
+        if: ${{ needs.coverage.result == 'success' }}
+        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"

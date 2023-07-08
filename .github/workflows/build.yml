@@ -36,3 +36,29 @@ jobs:
       - name: Down Docker
         run: |
           docker-compose down
+
+  coverage:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Install codecov
+        run: dotnet tool install -g codecov
+
+      - name: Run Code Coverage
+        run: |
+          dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/Coverage/
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: ./TestResults/Coverage/
