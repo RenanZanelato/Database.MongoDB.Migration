@@ -36,10 +36,17 @@ jobs:
           name: coverage-report
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
+      - name: Generate Version
+        id: version
+        run: |
+          echo "::set-output name=version::1.$(Rev:.r).0"
+
       - name: Pack NuGet package
-        run: dotnet pack --configuration Release --include-source --include-symbols
+        if: success()
+        run: dotnet pack --configuration Release --include-source --include-symbols --version 1.0.${{ steps.version.outputs.version }}
 
       - name: Publish NuGet package
+        if: success()
         run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
 
       - name: Down Docker
