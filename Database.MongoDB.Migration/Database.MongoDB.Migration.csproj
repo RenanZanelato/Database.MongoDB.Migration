@@ -4,7 +4,7 @@
         <Copyright>Renan Zanelato</Copyright>
         <Company>Renan Zanelato</Company>
         <Authors>Renan Zanelato</Authors>
-         <Version>1.0.$(GITHUB_RUN_NUMBER)</Version>
+         <Version>1.$(GITHUB_RUN_NUMBER).0</Version>
         <IsPackable>true</IsPackable>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
