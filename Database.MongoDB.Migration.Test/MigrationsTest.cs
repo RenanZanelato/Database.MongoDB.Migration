@@ -19,6 +19,7 @@ using SeedV1 = Database.MongoDB.Migration.Test.Fakes.Migrations.V1.FoodSeed;
 using SeedDatabase1 = Database.MongoDB.Migration.Test.Fakes.Migrations.V2.Database1.FoodSeed;
 using SeedDatabase2 = Database.MongoDB.Migration.Test.Fakes.Migrations.V2.Database2.PersonSeed;
 using SeedV3 = Database.MongoDB.Migration.Test.Fakes.Migrations.V3.FoodSeed;
+using SeedV4 = Database.MongoDB.Migration.Test.Fakes.Migrations.V4.FoodSeed;
 
 namespace Database.MongoDB.Migration.Test;
 
@@ -300,7 +301,30 @@ public class MigrationsTest
         var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
         var action = async () => await service.RunMigrationsAsync();
 
-        await action.Should().ThrowAsync<VersionException>()
-            .WithMessage("The files FoodSeed, PersonSeed has repeated version 1");
+        await action.Should().ThrowAsync<RepeatedVersionException>()
+            .WithMessage("Migrations FoodSeed, PersonSeed has repeated version 1");
+    }
+    
+    [Test]
+    public async Task Should_Throw_A_Exception_When_Exist_Files_With_A_Wrong_Sequential()
+    {
+        var database = _client.GetDatabase(Guid.NewGuid().ToString());
+
+        var serviceCollection = new ServiceCollection()
+            .AddScoped(_ => _loggerFactory)
+            .AddScoped(typeof(ILogger<>), typeof(Logger<>))
+            .AddMongoMigration(database, x =>
+            {
+                x.MigrationAssembly = typeof(SeedV1).Assembly;
+                x.Namespace = typeof(SeedV4).Namespace;
+            });
+        
+   
+        await using var serviceProvider = serviceCollection.BuildServiceProvider();
+        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
+        var action = async () => await service.RunMigrationsAsync();
+
+        await action.Should().ThrowAsync<SequentialVersionException>()
+            .WithMessage($"Migration PersonAgeSeed has a wrong sequential version 5");
     }
 }

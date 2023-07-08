@@ -3,7 +3,7 @@ using Database.MongoDB.Migration.Interfaces;
 
 namespace Database.MongoDB.Migration.Service;
 
-public class MongoMigrationDatabase<TMongoInstance> : IMongoMigrationDatabase<TMongoInstance> where TMongoInstance : IMongoMultiInstance
+internal class MongoMigrationDatabase<TMongoInstance> : IMongoMigrationDatabase<TMongoInstance> where TMongoInstance : IMongoMultiInstance
 {
     private readonly IMongoDatabase _mongoDatabase;
 

@@ -28,6 +28,7 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
     public async Task RunMigrationsAsync()
     {
         var migrations = _settings.GetMigrationsFromAssembly();
+        _validator.IsValidToMigrate(migrations);
 
         var migrationCollection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
 
@@ -37,9 +38,7 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         migrations = migrations
             .OrderBy(m => m.Version)
             .Where(m => (!appliedVersions.Contains(m.Version) && m.IsUp) || (appliedVersions.Contains(m.Version) && !m.IsUp));
-    
-        _validator.IsValidToMigrate(migrations);
-        
+
         foreach (var migration in migrations)
         {
             await UpgradeOrDowngradeMigrationAsync(migrationCollection, migration);
