@@ -6,7 +6,7 @@ namespace Database.MongoDB.Migration.Test.Fakes.Migrations.V1;
 
 public class PersonAgeSeed : BaseMigration
 {
-    public override int Version => 2;
+    public override string Version => "1.0.2";
     public override bool IsUp => true;
     
     public override async Task UpAsync(IMongoDatabase database)

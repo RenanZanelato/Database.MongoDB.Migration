@@ -9,8 +9,8 @@ internal class MigrationValidator : IMigrationValidator
 {
     public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
     {
+        ValidateSemanticVersions(migrations);
         ValidateRepeatedVersions(migrations);
-        ValidateSequentialVersions(migrations);
     }
 
     private void ValidateRepeatedVersions<TMigrations>(IEnumerable<TMigrations> migrations)
@@ -27,21 +27,29 @@ internal class MigrationValidator : IMigrationValidator
         }
     }
 
-    private void ValidateSequentialVersions<TMigrations>(IEnumerable<TMigrations> migrations)
+    private void ValidateSemanticVersions<TMigrations>(IEnumerable<TMigrations> migrations)
         where TMigrations : BaseMigration
     {
-        var orderedMigrations = migrations.OrderBy(x => x.Version);
-        var previousVersion = 0;
-
-        foreach (var migration in orderedMigrations)
+        foreach (var migration in migrations)
         {
-            if (migration.Version != previousVersion + 1)
+            var versionSeparator = migration.Version.Split(".");
+            var migrationName = migration.GetMigrationName();
+            if (versionSeparator.Length != 3)
             {
-                throw new SequentialVersionException(migration.GetMigrationName(), migration.Version);
+                throw new WrongSemanticVersionException(migrationName, migration.Version);
             }
-        
-            previousVersion = migration.Version;
-        }
 
+            ValidateVersionNumber(migrationName, versionSeparator[0]);
+            ValidateVersionNumber(migrationName, versionSeparator[1]);
+            ValidateVersionNumber(migrationName, versionSeparator[2]);
+        }
+    }
+    
+    private void ValidateVersionNumber(string migrationName, string value)
+    {
+        if (!int.TryParse(value, out _))
+        {
+            throw new WrongVersionException(migrationName, value);
+        }
     }
 }

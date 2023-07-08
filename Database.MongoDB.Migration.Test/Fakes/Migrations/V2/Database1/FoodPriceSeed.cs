@@ -6,7 +6,7 @@ namespace Database.MongoDB.Migration.Test.Fakes.Migrations.V2.Database1;
 
 public class FoodPriceSeed : BaseMigration
 {
-    public override int Version => 2;
+    public override string Version => "2.0.2";
     public override bool IsUp => true;
     
     public override async Task UpAsync(IMongoDatabase database)

@@ -1,12 +1,12 @@
-using MongoDB.Driver;
 using Database.MongoDB.Migration.Migration;
 using Database.MongoDB.Migration.Test.Fakes.Documents;
+using MongoDB.Driver;
 
-namespace Database.MongoDB.Migration.Test.Fakes.Migrations.V1;
+namespace Database.MongoDB.Migration.Test.Fakes.Migrations.V4.WrongSemantic;
 
 public class FoodPriceSeed : BaseMigration
 {
-    public override string Version => "1.0.4";
+    public override string Version => "4.0.1.0";
     public override bool IsUp => false;
     
     public override async Task UpAsync(IMongoDatabase database)

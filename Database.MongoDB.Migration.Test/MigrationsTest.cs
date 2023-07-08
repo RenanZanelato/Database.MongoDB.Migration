@@ -19,7 +19,8 @@ using SeedV1 = Database.MongoDB.Migration.Test.Fakes.Migrations.V1.FoodSeed;
 using SeedDatabase1 = Database.MongoDB.Migration.Test.Fakes.Migrations.V2.Database1.FoodSeed;
 using SeedDatabase2 = Database.MongoDB.Migration.Test.Fakes.Migrations.V2.Database2.PersonSeed;
 using SeedV3 = Database.MongoDB.Migration.Test.Fakes.Migrations.V3.FoodSeed;
-using SeedV4 = Database.MongoDB.Migration.Test.Fakes.Migrations.V4.FoodSeed;
+using SeedV4SemanticException = Database.MongoDB.Migration.Test.Fakes.Migrations.V4.WrongSemantic.FoodPriceSeed;
+using SeedV4VersionException = Database.MongoDB.Migration.Test.Fakes.Migrations.V4.WrongVersion.FoodPriceSeed;
 
 namespace Database.MongoDB.Migration.Test;
 
@@ -112,9 +113,9 @@ public class MigrationsTest
         defaultFood.Price.Should().Be(0);
 
         migrations.Should().HaveCount(3);
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonSeed][1] Up Successfully");
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonAgeSeed][2] Up Successfully");
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][FoodSeed][3] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonSeed][1.0.1] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonAgeSeed][1.0.2] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][FoodSeed][1.0.3] Up Successfully");
     }
     
     [Test]
@@ -137,7 +138,7 @@ public class MigrationsTest
         {
             Id = Guid.NewGuid(),
             Name = "FoodPriceSeed",
-            Version = 4,
+            Version = "1.0.4",
             CreatedDate = DateTime.UtcNow
         };
         await migrationCollection.InsertOneAsync(migrationDocument);
@@ -160,9 +161,9 @@ public class MigrationsTest
         foods.Should().HaveCount(101);
         defaultFood.Price.Should().Be(FoodFake.DefaultFoodPrice);
 
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonSeed][1] Up Successfully");
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonAgeSeed][2] Up Successfully");
-        _loggerMock.Received(1).LogInformation($"[{databaseName}][FoodSeed][3] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonSeed][1.0.1] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonAgeSeed][1.0.2] Up Successfully");
+        _loggerMock.Received(1).LogInformation($"[{databaseName}][FoodSeed][1.0.3] Up Successfully");
     }
     
     [Test]
@@ -187,19 +188,19 @@ public class MigrationsTest
             {
                 Id = Guid.NewGuid(),
                 Name = "PersonSeed",
-                Version = 1,
+                Version = "1.0.1",
                 CreatedDate = DateTime.UtcNow
             }, new()
             {
                 Id = Guid.NewGuid(),
                 Name = "PersonAgeSeed",
-                Version = 2,
+                Version = "1.0.2",
                 CreatedDate = DateTime.UtcNow
             }, new()
             {
                 Id = Guid.NewGuid(),
                 Name = "FoodSeed",
-                Version = 3,
+                Version = "1.0.3",
                 CreatedDate = DateTime.UtcNow
             }
         };
@@ -283,7 +284,7 @@ public class MigrationsTest
     }
     
     [Test]
-    public async Task Should_Throw_A_Exception_When_Exist_Files_With_The_Same_Version()
+    public async Task Should_Throw_A_Exception_When_Exist_Migrations_With_The_Same_Version()
     {
         var database = _client.GetDatabase(Guid.NewGuid().ToString());
 
@@ -302,11 +303,11 @@ public class MigrationsTest
         var action = async () => await service.RunMigrationsAsync();
 
         await action.Should().ThrowAsync<RepeatedVersionException>()
-            .WithMessage("Migrations FoodSeed, PersonSeed has repeated version 1");
+            .WithMessage("Migrations FoodSeed, PersonSeed has repeated version 3.0.1");
     }
     
     [Test]
-    public async Task Should_Throw_A_Exception_When_Exist_Files_With_A_Wrong_Sequential()
+    public async Task Should_Throw_A_Exception_When_Exist_Migration_With_Invalid_Semantic()
     {
         var database = _client.GetDatabase(Guid.NewGuid().ToString());
 
@@ -316,7 +317,7 @@ public class MigrationsTest
             .AddMongoMigration(database, x =>
             {
                 x.MigrationAssembly = typeof(SeedV1).Assembly;
-                x.Namespace = typeof(SeedV4).Namespace;
+                x.Namespace = typeof(SeedV4SemanticException).Namespace;
             });
         
    
@@ -324,7 +325,30 @@ public class MigrationsTest
         var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
         var action = async () => await service.RunMigrationsAsync();
 
-        await action.Should().ThrowAsync<SequentialVersionException>()
-            .WithMessage($"Migration PersonAgeSeed has a wrong sequential version 5");
+        await action.Should().ThrowAsync<WrongSemanticVersionException>()
+            .WithMessage($"Migration FoodPriceSeed with version 4.0.1.0 has wrong format, correct needs to be: major.minor.patch");
+    }
+    
+    [Test]
+    public async Task Should_Throw_A_Exception_When_Exist_Migration_With_Invalid_Version()
+    {
+        var database = _client.GetDatabase(Guid.NewGuid().ToString());
+
+        var serviceCollection = new ServiceCollection()
+            .AddScoped(_ => _loggerFactory)
+            .AddScoped(typeof(ILogger<>), typeof(Logger<>))
+            .AddMongoMigration(database, x =>
+            {
+                x.MigrationAssembly = typeof(SeedV1).Assembly;
+                x.Namespace = typeof(SeedV4VersionException).Namespace;
+            });
+        
+   
+        await using var serviceProvider = serviceCollection.BuildServiceProvider();
+        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
+        var action = async () => await service.RunMigrationsAsync();
+
+        await action.Should().ThrowAsync<WrongVersionException>()
+            .WithMessage($"Migration FoodPriceSeed with version B0 has wrong number of version. All parts need to be a number");
     }
 }
