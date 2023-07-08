@@ -1,0 +1,44 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Tests with Docker Compose
+        run: |
+          docker-compose up -d --build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Build Project
+        run: |
+          dotnet build --configuration Release
+          
+      - name: Run Tests
+        run: |
+          dotnet test --configuration Release --no-build
+
+      - name: Create Temp Directory
+        run: mkdir temp
+      
+      - name: Publish to NuGet
+        run: dotnet pack --configuration Release --include-source --include-symbols --output temp/
+
+      - name: Publish NuGet package
+        run: dotnet nuget push temp/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+      - name: Down Docker
+        run: |
+          docker-compose down

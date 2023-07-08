@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  mongodb:
+    image : mongo
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongodbdev
+      - MONGO_INITDB_ROOT_PASSWORD=mongodbdev
+    volumes:
+      - mongo_cache:/data/db
+    ports:
+      - 27017:27017
+    restart: always
+
+volumes:
+  mongo_cache:
