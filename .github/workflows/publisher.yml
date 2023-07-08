@@ -38,7 +38,7 @@ jobs:
 
       - name: Pack NuGet package
         if: success()
-        run: dotnet pack --configuration Release --include-source --include-symbols --version 1.$(Rev:.r).0
+        run: dotnet pack --configuration Release --include-source --include-symbols --version 1.${{ github.run_number }}.0
 
       - name: Publish NuGet package
         if: success()
