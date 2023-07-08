@@ -22,9 +22,6 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Install codecov
-        run: dotnet tool install -g codecov
-
       - name: Build Project
         run: |
           dotnet build --configuration Release
