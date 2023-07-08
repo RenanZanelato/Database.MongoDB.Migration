@@ -40,17 +40,35 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
     
         _validator.IsValidToMigrate(migrations);
         
-        foreach (var migration in migrations)
+        using var session = await _mongoDatabase.Client.StartSessionAsync();
+
+        try
         {
-            await UpgradeOrDowngradeMigrationAsync(migrationCollection, migration);
+            session.StartTransaction();
+
+            foreach (var migration in migrations)
+            {
+                await UpgradeOrDowngradeMigrationAsync(session, migrationCollection, migration);
+            }
+
+            await session.CommitTransactionAsync();
+        }
+        catch (Exception e)
+        {
+            await session.AbortTransactionAsync();
+            _logger.LogError(e, "Migration failed. Transaction aborted.");
+        }
+        finally
+        {
+            session.Dispose();
         }
     }
 
-    private async Task UpgradeOrDowngradeMigrationAsync(IMongoCollection<MigrationDocument> migrationCollection, BaseMigration migration)
+    private async Task UpgradeOrDowngradeMigrationAsync(IClientSessionHandle session, IMongoCollection<MigrationDocument> migrationCollection, BaseMigration migration)
     {
         if (migration.IsUp)
         {
-            await migration.UpAsync(_mongoDatabase);
+            await migration.UpAsync(session, _mongoDatabase);
             var migrationDocument = new MigrationDocument()
             {
                 Id = Guid.NewGuid(),
@@ -58,12 +76,12 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
                 Version = migration.Version,
                 CreatedDate = DateTime.UtcNow
             };
-            await migrationCollection.InsertOneAsync(migrationDocument);
+            await migrationCollection.InsertOneAsync(session, migrationDocument);
             _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
             return;
         }
-        await migration.DownAsync(_mongoDatabase);
-        await migrationCollection.DeleteOneAsync(Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version && x.Name == nameof(migration)));
+        await migration.DownAsync(session, _mongoDatabase);
+        await migrationCollection.DeleteOneAsync(session, Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version && x.Name == nameof(migration)));
         _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Down Successfully");
     }
 }
