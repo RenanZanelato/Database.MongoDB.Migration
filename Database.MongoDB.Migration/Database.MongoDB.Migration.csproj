@@ -4,6 +4,7 @@
         <Copyright>Renan Zanelato</Copyright>
         <Company>Renan Zanelato</Company>
         <Authors>Renan Zanelato</Authors>
+         <Version>1.0.$(Build.BuildId)</Version>
         <IsPackable>true</IsPackable>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
