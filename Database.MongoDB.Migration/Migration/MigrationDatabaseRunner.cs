@@ -7,14 +7,16 @@ using Database.MongoDB.Migration.Interfaces;
 
 namespace Database.MongoDB.Migration.Migration;
 
-internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunner<TMongoInstance> where TMongoInstance : IMongoMultiInstance
+internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunner<TMongoInstance>
+    where TMongoInstance : IMongoMultiInstance
 {
     private readonly IMongoDatabase _mongoDatabase;
     private readonly IMigrationValidator _validator;
     private readonly ILogger<MigrationDatabaseRunner<TMongoInstance>> _logger;
     private readonly MigrationSettings<TMongoInstance> _settings;
-    
-    public MigrationDatabaseRunner(IMongoMigrationDatabase<TMongoInstance> database, 
+    private readonly IMongoCollection<MigrationDocument> _collection;
+
+    public MigrationDatabaseRunner(IMongoMigrationDatabase<TMongoInstance> database,
         IOptions<MigrationSettings<TMongoInstance>> options,
         IMigrationValidator validator,
         ILogger<MigrationDatabaseRunner<TMongoInstance>> logger)
@@ -23,6 +25,7 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         _validator = validator;
         _logger = logger;
         _settings = options.Value;
+        _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
     }
 
     public async Task RunMigrationsAsync()
@@ -30,39 +33,63 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         var migrations = _settings.GetMigrationsFromAssembly();
         _validator.IsValidToMigrate(migrations);
 
-        var migrationCollection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
-
-        var appliedMigrations = await migrationCollection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
+        var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
         var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
-        migrations = migrations
-            .OrderBy(m => m.Version)
-            .Where(m => (!appliedVersions.Contains(m.Version) && m.IsUp) || (appliedVersions.Contains(m.Version) && !m.IsUp));
+        await UpdradeMigrationsAsync(migrations, appliedVersions);
+        await DowngradeMigrationsAsync(migrations, appliedVersions);
+    }
 
-        foreach (var migration in migrations)
+    private async Task UpdradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
+        IEnumerable<string> appliedVersions)
+    {
+        var migrationsToUpgrade = migrations
+            .OrderBy(m => m.Version)
+            .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp)
+            .OrderBy(m => m.Version);
+
+        foreach (var migration in migrationsToUpgrade)
         {
-            await UpgradeOrDowngradeMigrationAsync(migrationCollection, migration);
+            await UpgradeMigrationAsync(migration);
         }
     }
 
-    private async Task UpgradeOrDowngradeMigrationAsync(IMongoCollection<MigrationDocument> migrationCollection, BaseMigration migration)
+    private async Task DowngradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
+        IEnumerable<string> appliedVersions)
     {
-        if (migration.IsUp)
+        var migrationsToDowngrade = migrations
+            .OrderBy(m => m.Version)
+            .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp)
+            .OrderByDescending(m => m.Version);
+
+        foreach (var migration in migrationsToDowngrade)
         {
-            await migration.UpAsync(_mongoDatabase);
-            var migrationDocument = new MigrationDocument()
-            {
-                Id = Guid.NewGuid(),
-                Name = migration.GetMigrationName(),
-                Version = migration.Version,
-                CreatedDate = DateTime.UtcNow
-            };
-            await migrationCollection.InsertOneAsync(migrationDocument);
-            _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
-            return;
+            await DowngradeMigrationAsync(migration);
         }
+    }
+
+    private async Task UpgradeMigrationAsync(BaseMigration migration)
+    {
+        await migration.UpAsync(_mongoDatabase);
+        var migrationDocument = new MigrationDocument()
+        {
+            Id = Guid.NewGuid(),
+            Name = migration.GetMigrationName(),
+            Version = migration.Version,
+            CreatedDate = DateTime.UtcNow
+        };
+        await _collection.InsertOneAsync(migrationDocument);
+        _logger.LogInformation(
+            $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
+    }
+
+    private async Task DowngradeMigrationAsync(BaseMigration migration)
+    {
         await migration.DownAsync(_mongoDatabase);
-        await migrationCollection.DeleteOneAsync(Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version && x.Name == nameof(migration)));
-        _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Down Successfully");
+        await _collection.DeleteOneAsync(
+            Builders<MigrationDocument>.Filter.Where(x =>
+                x.Version == migration.Version && x.Name == nameof(migration)));
+        _logger.LogInformation(
+            $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Down Successfully");
     }
 }
