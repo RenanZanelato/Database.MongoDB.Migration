@@ -36,11 +36,11 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
         var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
-        await UpdradeMigrationsAsync(migrations, appliedVersions);
+        await UpgradeMigrationsAsync(migrations, appliedVersions);
         await DowngradeMigrationsAsync(migrations, appliedVersions);
     }
 
-    private async Task UpdradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
+    private async Task UpgradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
         IEnumerable<string> appliedVersions)
     {
         var migrationsToUpgrade = migrations
