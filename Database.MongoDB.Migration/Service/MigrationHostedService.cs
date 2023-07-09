@@ -29,10 +29,10 @@ internal class MigrationHostedService<TMongoInstance> : BackgroundService
     {
         var collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         var index = new CreateIndexModel<MigrationDocument>(Builders<MigrationDocument>.IndexKeys
-            .Ascending(x => x.Version)
-            .Ascending(x => x.Name), new CreateIndexOptions()
+            .Ascending(x => x.Version), new CreateIndexOptions()
         {
-            Name = "INDEX_01"
+            Name = "INDEX_01",
+            Unique = true
         });
         await collection.Indexes.CreateOneAsync(index, cancellationToken: stoppingToken);
     }

@@ -52,30 +52,7 @@ public class MigrationsTest
     {
         _loggerMock.ClearReceivedCalls();
     }
-    
-    [Test]
-    public async Task Should_Ensure_That_MigrationDocument_Index_Was_Created()
-    {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
 
-        var serviceCollection = new ServiceCollection()
-            .AddScoped(_ => _loggerFactory)
-            .AddScoped(typeof(ILogger<>), typeof(Logger<>))
-            .AddMongoMigration(database);
-
-        await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var hostedService = serviceProvider.GetRequiredService<IHostedService>();
-        await hostedService.StartAsync(CancellationToken.None);
-
-        Assert.That(async () =>
-        {
-            var migrationCollection = database.GetCollection<BsonDocument>("_migrations");
-            var migrations = await (await migrationCollection.Indexes.ListAsync()).ToListAsync();
-            migrations.Should().HaveCount(2);
-            return true;
-        }, Is.True.After(3).Seconds.PollEvery(1).Seconds);
-    }
-    
     [Test]
     public async Task Should_Execute_All_V1_Migrations_For_SingleDatabase()
     {

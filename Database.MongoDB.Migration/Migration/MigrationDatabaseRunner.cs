@@ -84,9 +84,7 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
     private async Task DowngradeMigrationAsync(BaseMigration migration)
     {
         await migration.DownAsync(_mongoDatabase);
-        await _collection.DeleteOneAsync(
-            Builders<MigrationDocument>.Filter.Where(x =>
-                x.Version == migration.Version && x.Name == nameof(migration)));
+        await _collection.DeleteOneAsync(Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version));
         _logger.LogInformation(
             $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Down Successfully");
     }
