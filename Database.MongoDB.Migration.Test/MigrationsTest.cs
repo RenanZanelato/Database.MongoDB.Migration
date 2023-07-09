@@ -326,7 +326,7 @@ public class MigrationsTest
         var action = async () => await service.RunMigrationsAsync();
 
         await action.Should().ThrowAsync<WrongSemanticVersionException>()
-            .WithMessage($"Migration FoodPriceSeed with version 4.0.1.0 has wrong format, correct needs to be: major.minor.patch");
+            .WithMessage($"Migration FoodPriceSeed with version 4.0.1.0 is in wrong format, the correct format should be x.x.x");
     }
     
     [Test]
@@ -349,6 +349,6 @@ public class MigrationsTest
         var action = async () => await service.RunMigrationsAsync();
 
         await action.Should().ThrowAsync<WrongVersionException>()
-            .WithMessage($"Migration FoodPriceSeed with version B0 has wrong number of version. All parts need to be a number");
+            .WithMessage($"Migration FoodPriceSeed with version 4.B0.1 has wrong path B0. All parts need to be a number");
     }
 }

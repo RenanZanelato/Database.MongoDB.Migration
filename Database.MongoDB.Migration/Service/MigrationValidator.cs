@@ -33,23 +33,23 @@ internal class MigrationValidator : IMigrationValidator
         foreach (var migration in migrations)
         {
             var versionSeparator = migration.Version.Split(".");
-            var migrationName = migration.GetMigrationName();
             if (versionSeparator.Length != 3)
             {
-                throw new WrongSemanticVersionException(migrationName, migration.Version);
+                throw new WrongSemanticVersionException(migration.GetMigrationName(), migration.Version);
             }
 
-            ValidateVersionNumber(migrationName, versionSeparator[0]);
-            ValidateVersionNumber(migrationName, versionSeparator[1]);
-            ValidateVersionNumber(migrationName, versionSeparator[2]);
+            ValidateVersionNumber(migration, versionSeparator[0]);
+            ValidateVersionNumber(migration, versionSeparator[1]);
+            ValidateVersionNumber(migration, versionSeparator[2]);
         }
     }
     
-    private void ValidateVersionNumber(string migrationName, string value)
+    private void ValidateVersionNumber<TMigrations>(TMigrations migration, string value) 
+        where TMigrations : BaseMigration
     {
         if (!int.TryParse(value, out _))
         {
-            throw new WrongVersionException(migrationName, value);
+            throw new WrongVersionException(migration.GetMigrationName(), migration.Version, value);
         }
     }
 }

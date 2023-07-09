@@ -4,7 +4,7 @@ namespace Database.MongoDB.Migration.Exceptions;
 internal class WrongSemanticVersionException: Exception
 {
     public WrongSemanticVersionException(string name, string version)
-        : base($"Migration {name} with version {version} has wrong format, correct needs to be: major.minor.patch")
+        : base($"Migration {name} with version {version} is in wrong format, the correct format should be x.x.x")
     {
     }
 }
