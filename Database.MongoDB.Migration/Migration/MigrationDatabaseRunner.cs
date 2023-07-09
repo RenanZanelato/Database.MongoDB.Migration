@@ -44,7 +44,6 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         IEnumerable<string> appliedVersions)
     {
         var migrationsToUpgrade = migrations
-            .OrderBy(m => m.Version)
             .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp)
             .OrderBy(m => m.Version);
 
@@ -58,7 +57,6 @@ internal class MigrationDatabaseRunner<TMongoInstance> : IMigrationDatabaseRunne
         IEnumerable<string> appliedVersions)
     {
         var migrationsToDowngrade = migrations
-            .OrderBy(m => m.Version)
             .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp)
             .OrderByDescending(m => m.Version);
 
