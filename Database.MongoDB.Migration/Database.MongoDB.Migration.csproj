@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <Copyright>Renan Zanelato</Copyright>
     <Company>Renan Zanelato</Company>
@@ -7,6 +6,7 @@
     <Version>1.$(GITHUB_RUN_NUMBER).0</Version>
     <IsPackable>true</IsPackable>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 </PropertyGroup>
 <PropertyGroup Condition="'$(Configuration)' != 'Release'">
     <Copyright>Renan Zanelato</Copyright>
@@ -34,6 +34,10 @@
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.20.0" />
     <PackageReference Include="codecov" Version="1.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>
