@@ -10,7 +10,7 @@ MongoDBMigration is a simple library open-sorce that facilitates MongoDB databas
 # Installation
 * This implation is based using the official library [MongoDB.Driver](https://github.com/mongodb/mongo-csharp-driver)
 * Use NuGet to install the MongoDBMigration library into your project. You can use the following command in the Package Manager Console:
-[Nuget](https://www.nuget.org/packages/Database.MongoDB.Migration/1.0.0)
+[Nuget](https://www.nuget.org/packages/Database.MongoDB.Migration)
 ````
 Install-Package Database.MongoDB.Migration
 ````
@@ -34,7 +34,7 @@ serviceCollection.AddMongoMigration(mongoDatabase, x =>
         {
             x.MigrationAssembly = typeof(SomeAssemblyWhereWilBeYourMigrations).Assembly;
             x.Namespace = typeof(IfYouWillUseJustASpecifyNamespace).Namespace; //optional
-        }));
+        });
 ```
 
 If you Will need a instance using another database, you can do this.
@@ -47,11 +47,11 @@ serviceCollection.AddMongoMigration(mongoDatabase, x =>
         {
             x.MigrationAssembly = typeof(SomeAssemblyWhereWilBeYourMigrations).Assembly;
             x.Namespace = typeof(IfYouWillUseJustASpecifyNamespace).Namespace; //optional
-        }.AddMongoMigration<ExampleMultiInstance>(mongoDatabase, x =>
+        }).AddMongoMigration<ExampleMultiInstance>(mongoDatabase, x =>
         {
             x.MigrationAssembly = typeof(SomeAssemblyWhereWilBeYourMigrations).Assembly;
             x.Namespace = typeof(AnotherNamespace).Namespace; //optional
-        }));
+        });
 
 ```
 
