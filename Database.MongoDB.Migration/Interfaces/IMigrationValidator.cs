@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using Database.MongoDB.Migration.Migration;
 
-namespace Database.MongoDB.Migration.Interfaces;
-
-internal interface IMigrationValidator
+namespace Database.MongoDB.Migration.Interfaces
 {
-    void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration;
+    internal interface IMigrationValidator
+    {
+        void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration;
+    }
 }

@@ -1,31 +1,35 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Database.MongoDB.Migration.Interfaces;
 using Database.MongoDB.Migration.Migration;
 
-namespace Database.MongoDB.Migration.Extensions;
-
-internal static class MigrationExtensions
+namespace Database.MongoDB.Migration.Extensions
 {
-    internal const string COLLECTION_NAME = "_migrations";
-    internal static IEnumerable<BaseMigration> GetMigrationsFromAssembly<TMongoInstance>(this MigrationSettings<TMongoInstance> settings) 
-        where TMongoInstance : IMongoMultiInstance
+    internal static class MigrationExtensions
     {
-        var migrationTypes = settings.MigrationAssembly.GetTypes()
-            .Where(t => t.IsSubclassOf(typeof(BaseMigration)) && !t.IsAbstract);
-
-        if (!string.IsNullOrEmpty(settings.Namespace))
+        internal const string COLLECTION_NAME = "_migrations";
+        internal static IEnumerable<BaseMigration> GetMigrationsFromAssembly<TMongoInstance>(this MigrationSettings<TMongoInstance> settings) 
+            where TMongoInstance : IMongoMultiInstance
         {
-           migrationTypes = migrationTypes.Where(x => x.Namespace == settings.Namespace);
-        }
+            var migrationTypes = settings.MigrationAssembly.GetTypes()
+                .Where(t => t.IsSubclassOf(typeof(BaseMigration)) && !t.IsAbstract);
 
-        foreach (var type in migrationTypes)
-        {
-            if (Activator.CreateInstance(type) is BaseMigration migration)
+            if (!string.IsNullOrEmpty(settings.Namespace))
             {
-                yield return migration;
+                migrationTypes = migrationTypes.Where(x => x.Namespace == settings.Namespace);
+            }
+
+            foreach (var type in migrationTypes)
+            {
+                if (Activator.CreateInstance(type) is BaseMigration migration)
+                {
+                    yield return migration;
+                }
             }
         }
-    }
 
-    internal static string GetMigrationName(this BaseMigration migration)
-        => migration.GetType().Name;
+        internal static string GetMigrationName(this BaseMigration migration)
+            => migration.GetType().Name;
+    }
 }

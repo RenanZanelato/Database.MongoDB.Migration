@@ -1,6 +1,7 @@
-namespace Database.MongoDB.Migration.Interfaces;
-
-public interface IMongoMultiInstance
+namespace Database.MongoDB.Migration.Interfaces
 {
+    public interface IMongoMultiInstance
+    {
     
+    }
 }

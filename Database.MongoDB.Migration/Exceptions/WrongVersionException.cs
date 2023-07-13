@@ -1,10 +1,13 @@
-namespace Database.MongoDB.Migration.Exceptions;
+using System;
 
-[Serializable]
-internal class WrongVersionException: Exception
+namespace Database.MongoDB.Migration.Exceptions
 {
-    public WrongVersionException(string name, string version, string wrongPath)
-        : base($"Migration {name} with version {version} has wrong path {wrongPath}. All parts need to be a number")
+    [Serializable]
+    internal class WrongVersionException: Exception
     {
+        public WrongVersionException(string name, string version, string wrongPath)
+            : base($"Migration {name} with version {version} has wrong path {wrongPath}. All parts need to be a number")
+        {
+        }
     }
 }

@@ -1,6 +1,9 @@
-namespace Database.MongoDB.Migration.Interfaces;
+using System.Threading.Tasks;
 
-internal interface IMigrationDatabaseRunner<in TMongoInstance> where TMongoInstance : IMongoMultiInstance 
+namespace Database.MongoDB.Migration.Interfaces
 {
-    Task RunMigrationsAsync();
+    internal interface IMigrationDatabaseRunner<in TMongoInstance> where TMongoInstance : IMongoMultiInstance 
+    {
+        Task RunMigrationsAsync();
+    }
 }

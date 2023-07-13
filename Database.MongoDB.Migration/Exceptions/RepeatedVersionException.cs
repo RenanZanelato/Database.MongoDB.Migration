@@ -1,10 +1,14 @@
-namespace Database.MongoDB.Migration.Exceptions;
+using System;
+using System.Collections.Generic;
 
-[Serializable]
-internal class RepeatedVersionException: Exception
+namespace Database.MongoDB.Migration.Exceptions
 {
-    public RepeatedVersionException(IEnumerable<string> names, string version)
-        : base($"Migrations {string.Join(", ", names)} has repeated version {version}")
+    [Serializable]
+    internal class RepeatedVersionException: Exception
     {
+        public RepeatedVersionException(IEnumerable<string> names, string version)
+            : base($"Migrations {string.Join(", ", names)} has repeated version {version}")
+        {
+        }
     }
 }

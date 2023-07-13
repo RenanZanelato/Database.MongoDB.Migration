@@ -1,10 +1,13 @@
-namespace Database.MongoDB.Migration.Exceptions;
+using System;
 
-[Serializable]
-internal class WrongSemanticVersionException: Exception
+namespace Database.MongoDB.Migration.Exceptions
 {
-    public WrongSemanticVersionException(string name, string version)
-        : base($"Migration {name} with version {version} is in wrong format, the correct format should be x.x.x")
+    [Serializable]
+    internal class WrongSemanticVersionException: Exception
     {
+        public WrongSemanticVersionException(string name, string version)
+            : base($"Migration {name} with version {version} is in wrong format, the correct format should be x.x.x")
+        {
+        }
     }
 }

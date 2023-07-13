@@ -1,8 +1,9 @@
 using MongoDB.Driver;
 
-namespace Database.MongoDB.Migration.Interfaces;
-
-internal interface IMongoMigrationDatabase<out TMongoInstance> where TMongoInstance : IMongoMultiInstance
+namespace Database.MongoDB.Migration.Interfaces
 {
-    IMongoDatabase GetDatabase();
+    internal interface IMongoMigrationDatabase<out TMongoInstance> where TMongoInstance : IMongoMultiInstance
+    {
+        IMongoDatabase GetDatabase();
+    }
 }

@@ -1,9 +1,12 @@
-namespace Database.MongoDB.Migration.Document;
+using System;
 
-internal class MigrationDocument
+namespace Database.MongoDB.Migration.Document
 {
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public string Version { get; set; }
-    public DateTime CreatedDate { get; set; }
+    internal class MigrationDocument
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public DateTime CreatedDate { get; set; }
+    }   
 }

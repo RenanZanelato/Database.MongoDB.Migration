@@ -1,19 +1,20 @@
 using MongoDB.Driver;
 using Database.MongoDB.Migration.Interfaces;
 
-namespace Database.MongoDB.Migration.Service;
-
-internal class MongoMigrationDatabase<TMongoInstance> : IMongoMigrationDatabase<TMongoInstance> where TMongoInstance : IMongoMultiInstance
+namespace Database.MongoDB.Migration.Service
 {
-    private readonly IMongoDatabase _mongoDatabase;
-
-    public MongoMigrationDatabase(IMongoDatabase mongoDatabase)
+    internal class MongoMigrationDatabase<TMongoInstance> : IMongoMigrationDatabase<TMongoInstance> where TMongoInstance : IMongoMultiInstance
     {
-        _mongoDatabase = mongoDatabase;
-    }
+        private readonly IMongoDatabase _mongoDatabase;
 
-    public IMongoDatabase GetDatabase()
-    {
-        return _mongoDatabase;
+        public MongoMigrationDatabase(IMongoDatabase mongoDatabase)
+        {
+            _mongoDatabase = mongoDatabase;
+        }
+
+        public IMongoDatabase GetDatabase()
+        {
+            return _mongoDatabase;
+        }
     }
 }
