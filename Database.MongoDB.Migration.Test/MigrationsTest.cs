@@ -94,7 +94,27 @@ public class MigrationsTest
         _loggerMock.Received(1).LogInformation($"[{databaseName}][PersonAgeSeed][1.0.2] Up Successfully");
         _loggerMock.Received(1).LogInformation($"[{databaseName}][FoodSeed][1.0.3] Up Successfully");
     }
-    
+
+    [Test]
+    public async Task Should_Not_Throw_Exception_When_Assembly_Not_Found_Any_Migrations()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
+
+        var serviceCollection = new ServiceCollection()
+            .AddScoped(_ => _loggerFactory)
+            .AddScoped(typeof(ILogger<>), typeof(Logger<>))
+            .AddMongoMigration(database, x => { x.Namespace = typeof(SeedV1).Namespace; });
+
+        await using var serviceProvider = serviceCollection.BuildServiceProvider();
+        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
+        await service.RunMigrationsAsync();
+
+        var migrationCollection = database.GetCollection<BsonDocument>("_migrations");
+        var migrations = await (await migrationCollection.FindAsync(Builders<BsonDocument>.Filter.Empty)).ToListAsync();
+        migrations.Should().HaveCount(0);
+    }
+
     [Test]
     public async Task Should_Execute_All_V1_Migrations_For_SingleDatabase_And_Execute_One_Downgrade()
     {
