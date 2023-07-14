@@ -10,10 +10,11 @@ namespace Database.MongoDB.Migration.Validator
 {
     internal class MigrationValidator: IMigrationValidator
     {
-        public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
+        public bool IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
         {
             ValidateSemanticVersions(migrations);
             ValidateRepeatedVersions(migrations);
+            return true;
         }
 
         public bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
@@ -68,11 +69,6 @@ namespace Database.MongoDB.Migration.Validator
             {
                 throw new WrongVersionException(migration.GetMigrationName(), migration.Version, value);
             }
-        }
-
-        public bool IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied, string databaseName) where TMigrations : BaseMigration
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

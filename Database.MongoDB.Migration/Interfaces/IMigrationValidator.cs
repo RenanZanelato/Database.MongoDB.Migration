@@ -6,7 +6,7 @@ namespace Database.MongoDB.Migration.Interfaces
 {
     internal interface IMigrationValidator
     {
-        void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration;
+        bool IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration;
         bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration;
     }
 }
