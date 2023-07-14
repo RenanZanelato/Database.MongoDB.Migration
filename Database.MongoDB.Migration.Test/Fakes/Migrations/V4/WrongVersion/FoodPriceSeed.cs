@@ -9,7 +9,7 @@ public class FoodPriceSeed : BaseMigration
     public override string Version => "4.B0.1";
     public override bool IsUp => false;
     
-    public override async Task UpAsync(IMongoDatabase database)
+    public override async Task UpAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Food>(FoodFake.COLLECTION_NAME);
         var person = await (await collection.FindAsync(Builders<Food>.Filter.Where(x => x.Id == FoodFake.DefaultFoodId))).FirstOrDefaultAsync();
@@ -18,7 +18,7 @@ public class FoodPriceSeed : BaseMigration
         await collection.ReplaceOneAsync(Builders<Food>.Filter.Where(x => x.Id == FoodFake.DefaultFoodId), person);
     }
 
-    public override async Task DownAsync(IMongoDatabase database)
+    public override async Task DownAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Food>(FoodFake.COLLECTION_NAME);
         var person = await (await collection.FindAsync(Builders<Food>.Filter.Where(x => x.Id == FoodFake.DefaultFoodId))).FirstOrDefaultAsync();

@@ -9,15 +9,15 @@ public class FoodSeed : BaseMigration
     public override string Version => "2.0.1";
     public override bool IsUp => true;
     
-    public override async Task UpAsync(IMongoDatabase database)
+    public override async Task UpAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Food>(FoodFake.COLLECTION_NAME);
-        await collection.InsertManyAsync(FoodFake.CreateFoods());
+        await collection.InsertManyAsync(clientSessionHandle, FoodFake.CreateFoods());
     }
 
-    public override async Task DownAsync(IMongoDatabase database)
+    public override async Task DownAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Food>(FoodFake.COLLECTION_NAME);
-        await collection.DeleteManyAsync(Builders<Food>.Filter.Empty);
+        await collection.DeleteManyAsync(clientSessionHandle, Builders<Food>.Filter.Empty);
     }
 }

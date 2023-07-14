@@ -9,21 +9,21 @@ public class PersonAgeSeed : BaseMigration
     public override string Version => "2.0.2";
     public override bool IsUp => true;
     
-    public override async Task UpAsync(IMongoDatabase database)
+    public override async Task UpAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Person>(PersonFake.COLLECTION_NAME);
         var person = await (await collection.FindAsync(Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId))).FirstOrDefaultAsync();
         person.Age = PersonFake.DefaultPersonAge;
 
-        await collection.ReplaceOneAsync(Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId), person);
+        await collection.ReplaceOneAsync(clientSessionHandle, Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId), person);
     }
 
-    public override async Task DownAsync(IMongoDatabase database)
+    public override async Task DownAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         var collection = database.GetCollection<Person>(PersonFake.COLLECTION_NAME);
         var person = await (await collection.FindAsync(Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId))).FirstOrDefaultAsync();
         person.Age = 0;
 
-        await collection.ReplaceOneAsync(Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId), person);
+        await collection.ReplaceOneAsync(clientSessionHandle, Builders<Person>.Filter.Where(x => x.Id == PersonFake.DefaultPersonId), person);
     }
 }

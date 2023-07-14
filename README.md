@@ -78,12 +78,12 @@ public class ExampleMigration : BaseMigration
     //False - Will do a downgrade if the migration was already applyed
     //True - Will apply the migration
     
-    public override async Task UpAsync(IMongoDatabase database)
+    public override async Task UpAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         // Your migration logical here
     }
 
-    public override async Task DownAsync(IMongoDatabase database)
+    public override async Task DownAsync(IClientSessionHandle clientSessionHandle, IMongoDatabase database)
     {
         // Your migration logical here
     }

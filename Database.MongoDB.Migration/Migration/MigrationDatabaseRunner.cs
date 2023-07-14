@@ -40,11 +40,31 @@ namespace Database.MongoDB.Migration.Migration
             var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
             var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
-            await UpgradeMigrationsAsync(migrations, appliedVersions);
-            await DowngradeMigrationsAsync(migrations, appliedVersions);
+            using (var session = await _mongoDatabase.Client.StartSessionAsync())
+            {
+                try
+                {
+                    session.StartTransaction();
+
+                    await UpgradeMigrationsAsync(session, migrations, appliedVersions);
+                    await DowngradeMigrationsAsync(session, migrations, appliedVersions);
+
+                    await session.CommitTransactionAsync();
+                }
+                catch (Exception ex)
+                {
+                    await session.AbortTransactionAsync();
+                    _logger.LogError(ex, $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Migrations failed. Transaction aborted.");
+                }
+                finally
+                {
+                    session.Dispose();
+                }
+            }
         }
 
-        private async Task UpgradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
+        private async Task UpgradeMigrationsAsync(IClientSessionHandle clientSessionHandle,
+            IEnumerable<BaseMigration> migrations,
             IEnumerable<string> appliedVersions)
         {
             var migrationsToUpgrade = migrations
@@ -53,11 +73,12 @@ namespace Database.MongoDB.Migration.Migration
 
             foreach (var migration in migrationsToUpgrade)
             {
-                await UpgradeMigrationAsync(migration);
+                await UpgradeMigrationAsync(clientSessionHandle, migration);
             }
         }
 
-        private async Task DowngradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
+        private async Task DowngradeMigrationsAsync(IClientSessionHandle clientSessionHandle,
+            IEnumerable<BaseMigration> migrations,
             IEnumerable<string> appliedVersions)
         {
             var migrationsToDowngrade = migrations
@@ -66,13 +87,13 @@ namespace Database.MongoDB.Migration.Migration
 
             foreach (var migration in migrationsToDowngrade)
             {
-                await DowngradeMigrationAsync(migration);
+                await DowngradeMigrationAsync(clientSessionHandle, migration);
             }
         }
 
-        private async Task UpgradeMigrationAsync(BaseMigration migration)
+        private async Task UpgradeMigrationAsync(IClientSessionHandle clientSessionHandle, BaseMigration migration)
         {
-            await migration.UpAsync(_mongoDatabase);
+            await migration.UpAsync(clientSessionHandle, _mongoDatabase);
             var migrationDocument = new MigrationDocument()
             {
                 Id = Guid.NewGuid(),
@@ -85,9 +106,10 @@ namespace Database.MongoDB.Migration.Migration
                 $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
         }
 
-        private async Task DowngradeMigrationAsync(BaseMigration migration)
+        private async Task DowngradeMigrationAsync(IClientSessionHandle clientSessionHandle,
+            BaseMigration migration)
         {
-            await migration.DownAsync(_mongoDatabase);
+            await migration.DownAsync(clientSessionHandle, _mongoDatabase);
             await _collection.DeleteOneAsync(
                 Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version));
             _logger.LogInformation(
