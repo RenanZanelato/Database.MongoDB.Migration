@@ -38,8 +38,7 @@ namespace Database.MongoDB.Migration.Service
             var migrationsToApply = _settings.GetMigrationsFromAssembly();
             if (!migrationsToApply.Any())
             {
-                _logger.LogInformation(
-                    $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
+                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
                 return;
             }
 

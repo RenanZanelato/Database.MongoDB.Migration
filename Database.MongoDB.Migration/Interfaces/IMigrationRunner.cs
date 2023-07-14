@@ -5,8 +5,9 @@ using Database.MongoDB.Migration.Migration;
 
 namespace Database.MongoDB.Migration.Interfaces
 {
-    internal interface IMigrationDatabaseRunner<in TMongoInstance> where TMongoInstance : IMongoMultiInstance 
+    internal interface IMigrationDatabaseRunner<in TMongoInstance> where TMongoInstance : IMongoMultiInstance
     {
-        Task RunMigrationsAsync(IEnumerable<BaseMigration> migrations, IEnumerable<MigrationDocument> appliedMigrations);
+        Task RunMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
+            IEnumerable<MigrationDocument> appliedMigrations) where TMigrations : BaseMigration;
     }
 }

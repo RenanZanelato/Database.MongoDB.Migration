@@ -25,7 +25,7 @@ namespace Database.MongoDB.Migration.Migration
             _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         }
 
-        public async Task RunMigrationsAsync(IEnumerable<BaseMigration> migrations, IEnumerable<MigrationDocument> appliedMigrations)
+        public async Task RunMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> appliedMigrations) where TMigrations : BaseMigration
         {
             var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
@@ -33,8 +33,8 @@ namespace Database.MongoDB.Migration.Migration
             await DowngradeMigrationsAsync(migrations, appliedVersions);
         }
 
-        private async Task UpgradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
-            IEnumerable<string> appliedVersions)
+        private async Task UpgradeMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
+            IEnumerable<string> appliedVersions) where TMigrations : BaseMigration
         {
             var migrationsToUpgrade = migrations
                 .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp)
@@ -46,8 +46,8 @@ namespace Database.MongoDB.Migration.Migration
             }
         }
 
-        private async Task DowngradeMigrationsAsync(IEnumerable<BaseMigration> migrations,
-            IEnumerable<string> appliedVersions)
+        private async Task DowngradeMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
+            IEnumerable<string> appliedVersions) where TMigrations : BaseMigration
         {
             var migrationsToDowngrade = migrations
                 .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp)
@@ -59,7 +59,7 @@ namespace Database.MongoDB.Migration.Migration
             }
         }
 
-        private async Task UpgradeMigrationAsync(BaseMigration migration)
+        private async Task UpgradeMigrationAsync<TMigrations>(TMigrations migration) where TMigrations : BaseMigration
         {
             await migration.UpAsync(_mongoDatabase);
             var migrationDocument = new MigrationDocument()
@@ -73,7 +73,7 @@ namespace Database.MongoDB.Migration.Migration
             _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
         }
 
-        private async Task DowngradeMigrationAsync(BaseMigration migration)
+        private async Task DowngradeMigrationAsync<TMigrations>(TMigrations migration) where TMigrations : BaseMigration
         {
             await migration.DownAsync(_mongoDatabase);
             await _collection.DeleteOneAsync(

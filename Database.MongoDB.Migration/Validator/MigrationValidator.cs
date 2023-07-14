@@ -8,15 +8,14 @@ using Database.MongoDB.Migration.Migration;
 
 namespace Database.MongoDB.Migration.Validator
 {
-    internal class MigrationValidator: IMigrationValidator
+    internal class MigrationValidator : IMigrationValidator
     {
-        public bool IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
+        public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
         {
             ValidateSemanticVersions(migrations);
             ValidateRepeatedVersions(migrations);
-            return true;
         }
-
+        
         public bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
         {
             var latestedMigrationToApply = migrations
