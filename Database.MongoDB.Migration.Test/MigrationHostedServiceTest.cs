@@ -51,7 +51,7 @@ public class MigrationHostedServiceTest
 
         Assert.That(async () =>
         {
-            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<IMongoMultiInstance>>();
+            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabaseService<IMongoMultiInstance>>();
             var migrationCollection = database.GetDatabase().GetCollection<MigrationDocument>("_migrations");
             var migrations = await (await migrationCollection.Indexes.ListAsync()).ToListAsync();
             migrations.Should().HaveCount(2);
@@ -86,7 +86,7 @@ public class MigrationHostedServiceTest
                     CreatedDate = DateTime.UtcNow,
                 }
             };
-            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<IMongoMultiInstance>>();
+            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabaseService<IMongoMultiInstance>>();
             var migrationCollection = database.GetDatabase().GetCollection<MigrationDocument>("_migrations");
 
             var func = async () => await migrationCollection.InsertManyAsync(fakeDocument);

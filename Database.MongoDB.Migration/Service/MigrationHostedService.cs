@@ -14,7 +14,7 @@ namespace Database.MongoDB.Migration.Service
         private readonly IMigrationDatabaseService<TMongoInstance> _databaseService;
         private readonly IMongoDatabase _mongoDatabase;
 
-        public MigrationHostedService(IMigrationDatabaseService<TMongoInstance> databaseService, IMongoMigrationDatabase<TMongoInstance> database)
+        public MigrationHostedService(IMigrationDatabaseService<TMongoInstance> databaseService, IMongoMigrationDatabaseService<TMongoInstance> database)
         {
             _databaseService = databaseService;
             _mongoDatabase = database.GetDatabase();

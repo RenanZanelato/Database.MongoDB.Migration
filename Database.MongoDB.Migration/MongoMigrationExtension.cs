@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using Database.MongoDB.Migration.Interfaces;
 using Database.MongoDB.Migration.Migration;
 using Database.MongoDB.Migration.Service;
+using Database.MongoDB.Migration.Validator;
 
 namespace Database.MongoDB.Migration
 {
@@ -35,7 +36,7 @@ namespace Database.MongoDB.Migration
 
             serviceCollection
                 .AddSingleton<IMigrationValidator, MigrationValidator>()
-                .AddSingleton<IMongoMigrationDatabase<TMongoInstance>, MongoMigrationDatabase<TMongoInstance>>(_ => new MongoMigrationDatabase<TMongoInstance>(mongoDatabase))
+                .AddSingleton<IMongoMigrationDatabaseService<TMongoInstance>, MongoMigrationDatabaseService<TMongoInstance>>(_ => new MongoMigrationDatabaseService<TMongoInstance>(mongoDatabase))
                 .AddSingleton<IMigrationDatabaseService<TMongoInstance>, MigrationDatabaseService<TMongoInstance>>()
                 .AddSingleton<IMigrationDatabaseRunner<TMongoInstance>, MigrationDatabaseRunner<TMongoInstance>>()
                 .AddHostedService<MigrationHostedService<TMongoInstance>>();

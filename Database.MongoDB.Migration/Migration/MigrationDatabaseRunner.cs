@@ -18,7 +18,7 @@ namespace Database.MongoDB.Migration.Migration
         private readonly ILogger<MigrationDatabaseRunner<TMongoInstance>> _logger;
         private readonly IMongoCollection<MigrationDocument> _collection;
 
-        public MigrationDatabaseRunner(IMongoMigrationDatabase<TMongoInstance> database,
+        public MigrationDatabaseRunner(IMongoMigrationDatabaseService<TMongoInstance> database,
             ILogger<MigrationDatabaseRunner<TMongoInstance>> logger)
         {
             _mongoDatabase = database.GetDatabase();

@@ -6,7 +6,7 @@ using Database.MongoDB.Migration.Extensions;
 using Database.MongoDB.Migration.Interfaces;
 using Database.MongoDB.Migration.Migration;
 
-namespace Database.MongoDB.Migration.Service
+namespace Database.MongoDB.Migration.Validator
 {
     internal class MigrationValidator: IMigrationValidator
     {

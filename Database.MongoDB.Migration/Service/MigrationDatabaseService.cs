@@ -19,7 +19,7 @@ namespace Database.MongoDB.Migration.Service
         private readonly MigrationSettings<TMongoInstance> _settings;
         private readonly IMongoCollection<MigrationDocument> _collection;
 
-        public MigrationDatabaseService(IMongoMigrationDatabase<TMongoInstance> database,
+        public MigrationDatabaseService(IMongoMigrationDatabaseService<TMongoInstance> database,
             IOptions<MigrationSettings<TMongoInstance>> options,
             IMigrationValidator validator,
             ILogger<MigrationDatabaseService<TMongoInstance>> logger,
