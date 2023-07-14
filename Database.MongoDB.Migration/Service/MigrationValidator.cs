@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Database.MongoDB.Migration.Document;
 using Database.MongoDB.Migration.Exceptions;
 using Database.MongoDB.Migration.Extensions;
 using Database.MongoDB.Migration.Interfaces;
@@ -14,7 +15,21 @@ namespace Database.MongoDB.Migration.Service
             ValidateSemanticVersions(migrations);
             ValidateRepeatedVersions(migrations);
         }
-    
+
+        public bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
+        {
+            var latestedMigrationToApply = migrations
+                .Where(x => x.IsUp)
+                .OrderBy(x => x.Version)
+                .Last().Version;
+            
+            var latestedMigrationApplied = migrationsApplied
+                .OrderBy(x => x.Version)
+                .Last().Version;
+
+            return latestedMigrationToApply == latestedMigrationApplied;
+        }
+
         private void ValidateRepeatedVersions<TMigrations>(IEnumerable<TMigrations> migrations)
             where TMigrations : BaseMigration
         {

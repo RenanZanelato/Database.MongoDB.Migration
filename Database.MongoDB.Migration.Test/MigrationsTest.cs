@@ -113,6 +113,9 @@ public class MigrationsTest
         var migrationCollection = database.GetCollection<BsonDocument>("_migrations");
         var migrations = await (await migrationCollection.FindAsync(Builders<BsonDocument>.Filter.Empty)).ToListAsync();
         migrations.Should().HaveCount(0);
+        
+        _loggerMock.Received(1).LogInformation($"[{databaseName}] Any migrations was found to apply");
+
     }
 
     [Test]
@@ -216,7 +219,7 @@ public class MigrationsTest
         persons.Should().HaveCount(0);
         foods.Should().HaveCount(0);
 
-        _loggerMock.ReceivedCalls().Should().BeEmpty();
+        _loggerMock.Received(1).LogInformation($"[{databaseName}] Latested migration FoodSeed version 1.0.3 already applied");
     }
     
     [Test]

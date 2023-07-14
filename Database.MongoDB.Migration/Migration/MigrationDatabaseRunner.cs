@@ -35,9 +35,24 @@ namespace Database.MongoDB.Migration.Migration
         public async Task RunMigrationsAsync()
         {
             var migrations = _settings.GetMigrationsFromAssembly();
+            if (!migrations.Any())
+            {
+                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
+                return;
+            }
+            
             _validator.IsValidToMigrate(migrations);
 
             var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
+            if (appliedMigrations.Any() && _validator.CompareLastedVersionApplied(migrations, appliedMigrations))
+            {
+                var migrationApplied = appliedMigrations
+                    .OrderBy(x => x.Version)
+                    .Last();
+                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Latested migration {migrationApplied.Name} version {migrationApplied.Version} already applied");
+                return;
+            }
+            
             var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
             await UpgradeMigrationsAsync(migrations, appliedVersions);
@@ -81,8 +96,7 @@ namespace Database.MongoDB.Migration.Migration
                 CreatedDate = DateTime.UtcNow
             };
             await _collection.InsertOneAsync(migrationDocument);
-            _logger.LogInformation(
-                $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
+            _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
         }
 
         private async Task DowngradeMigrationAsync(BaseMigration migration)
