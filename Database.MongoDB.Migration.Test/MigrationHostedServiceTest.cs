@@ -1,6 +1,5 @@
 using Database.MongoDB.Migration.Document;
 using Database.MongoDB.Migration.Interfaces;
-using Database.MongoDB.Migration.Migration;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +30,7 @@ public class MigrationHostedServiceTest
         
         var serviceCollection = new ServiceCollection()
             .AddMongoMigration(client.GetDatabase(databaseName))
-            .AddScoped(_ => Substitute.For<IMigrationDatabaseRunner<MongoDefaultInstance>>());
+            .AddScoped(_ => Substitute.For<IMigrationDatabaseService<IMongoMultiInstance>>());
 
         _serviceProvider = serviceCollection.BuildServiceProvider();
     }
@@ -52,7 +51,7 @@ public class MigrationHostedServiceTest
 
         Assert.That(async () =>
         {
-            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<MongoDefaultInstance>>();
+            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<IMongoMultiInstance>>();
             var migrationCollection = database.GetDatabase().GetCollection<MigrationDocument>("_migrations");
             var migrations = await (await migrationCollection.Indexes.ListAsync()).ToListAsync();
             migrations.Should().HaveCount(2);
@@ -87,7 +86,7 @@ public class MigrationHostedServiceTest
                     CreatedDate = DateTime.UtcNow,
                 }
             };
-            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<MongoDefaultInstance>>();
+            var database = scoped.ServiceProvider.GetRequiredService<IMongoMigrationDatabase<IMongoMultiInstance>>();
             var migrationCollection = database.GetDatabase().GetCollection<MigrationDocument>("_migrations");
 
             var func = async () => await migrationCollection.InsertManyAsync(fakeDocument);

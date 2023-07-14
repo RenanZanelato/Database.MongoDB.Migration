@@ -12,11 +12,11 @@ namespace Database.MongoDB.Migration
     {
         public static IServiceCollection AddMongoMigration(this IServiceCollection serviceCollection,
             IMongoDatabase mongoDatabase)
-            => serviceCollection.AddMongoMigration<MongoDefaultInstance>(mongoDatabase);
+            => serviceCollection.AddMongoMigration<IMongoMultiInstance>(mongoDatabase);
 
         public static IServiceCollection AddMongoMigration(this IServiceCollection serviceCollection,
-            IMongoDatabase mongoDatabase, Action<MigrationSettings<MongoDefaultInstance>> options)
-            => serviceCollection.AddMongoMigration<MongoDefaultInstance>(mongoDatabase, options);
+            IMongoDatabase mongoDatabase, Action<MigrationSettings<IMongoMultiInstance>> options)
+            => serviceCollection.AddMongoMigration<IMongoMultiInstance>(mongoDatabase, options);
 
         public static IServiceCollection AddMongoMigration<TMongoInstance>(this IServiceCollection serviceCollection,
             IMongoDatabase mongoDatabase)
@@ -35,8 +35,8 @@ namespace Database.MongoDB.Migration
 
             serviceCollection
                 .AddSingleton<IMigrationValidator, MigrationValidator>()
-                .AddSingleton<IMongoMigrationDatabase<TMongoInstance>, MongoMigrationDatabase<TMongoInstance>>(_ =>
-                    new MongoMigrationDatabase<TMongoInstance>(mongoDatabase))
+                .AddSingleton<IMongoMigrationDatabase<TMongoInstance>, MongoMigrationDatabase<TMongoInstance>>(_ => new MongoMigrationDatabase<TMongoInstance>(mongoDatabase))
+                .AddSingleton<IMigrationDatabaseService<TMongoInstance>, MigrationDatabaseService<TMongoInstance>>()
                 .AddSingleton<IMigrationDatabaseRunner<TMongoInstance>, MigrationDatabaseRunner<TMongoInstance>>()
                 .AddHostedService<MigrationHostedService<TMongoInstance>>();
 

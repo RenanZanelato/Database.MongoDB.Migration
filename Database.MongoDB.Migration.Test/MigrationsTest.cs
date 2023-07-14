@@ -8,7 +8,6 @@ using Database.MongoDB.Migration.Document;
 using Database.MongoDB.Migration.Exceptions;
 using Database.MongoDB.Migration.Extensions;
 using Database.MongoDB.Migration.Interfaces;
-using Database.MongoDB.Migration.Migration;
 using Database.MongoDB.Migration.Test.Fakes;
 using Database.MongoDB.Migration.Test.Fakes.Documents;
 using Database.MongoDB.Migration.Test.Fakes.Migrations;
@@ -69,8 +68,8 @@ public class MigrationsTest
         });
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        await service.ExecuteAsync();
 
         var personCollection = database.GetCollection<Person>(PersonFake.COLLECTION_NAME);
         var persons = await (await personCollection.FindAsync(Builders<Person>.Filter.Empty)).ToListAsync();
@@ -107,8 +106,8 @@ public class MigrationsTest
             .AddMongoMigration(database, x => { x.Namespace = typeof(SeedV1).Namespace; });
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        await service.ExecuteAsync();
 
         var migrationCollection = database.GetCollection<BsonDocument>("_migrations");
         var migrations = await (await migrationCollection.FindAsync(Builders<BsonDocument>.Filter.Empty)).ToListAsync();
@@ -144,8 +143,8 @@ public class MigrationsTest
         await migrationCollection.InsertOneAsync(migrationDocument);
         
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        await service.ExecuteAsync();
 
         var personCollection = database.GetCollection<Person>(PersonFake.COLLECTION_NAME);
         var persons = await (await personCollection.FindAsync(Builders<Person>.Filter.Empty)).ToListAsync();
@@ -207,9 +206,9 @@ public class MigrationsTest
         await migrationCollection.InsertManyAsync(migrationDocuments);
         
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        await service.RunMigrationsAsync();
-
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        await service.ExecuteAsync();
+        
         var personCollection = database.GetCollection<Person>(PersonFake.COLLECTION_NAME);
         var persons = await (await personCollection.FindAsync(Builders<Person>.Filter.Empty)).ToListAsync();
 
@@ -296,11 +295,10 @@ public class MigrationsTest
             x.MigrationAssembly = typeof(SeedV1).Assembly;
             x.Namespace = typeof(SeedV3).Namespace;
         });
-        
-   
+
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        var action = async () => await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        var action = async () => await service.ExecuteAsync();
 
         await action.Should().ThrowAsync<RepeatedVersionException>()
             .WithMessage("Migrations FoodSeed, PersonSeed has repeated version 3.0.1");
@@ -320,10 +318,9 @@ public class MigrationsTest
                 x.Namespace = typeof(SeedV4SemanticException).Namespace;
             });
         
-   
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        var action = async () => await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        var action = async () => await service.ExecuteAsync();
 
         await action.Should().ThrowAsync<WrongSemanticVersionException>()
             .WithMessage($"Migration FoodPriceSeed with version 4.0.1.0 is in wrong format, the correct format should be x.x.x");
@@ -342,11 +339,10 @@ public class MigrationsTest
                 x.MigrationAssembly = typeof(SeedV1).Assembly;
                 x.Namespace = typeof(SeedV4VersionException).Namespace;
             });
-        
-   
+
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
-        var service = serviceProvider.GetService<IMigrationDatabaseRunner<MongoDefaultInstance>>();
-        var action = async () => await service.RunMigrationsAsync();
+        var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
+        var action = async () => await service.ExecuteAsync();
 
         await action.Should().ThrowAsync<WrongVersionException>()
             .WithMessage($"Migration FoodPriceSeed with version 4.B0.1 has wrong path B0. All parts need to be a number");

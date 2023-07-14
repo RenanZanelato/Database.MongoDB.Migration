@@ -11,20 +11,19 @@ namespace Database.MongoDB.Migration.Service
     internal class MigrationHostedService<TMongoInstance> : BackgroundService
         where TMongoInstance : IMongoMultiInstance
     {
-        private readonly IMigrationDatabaseRunner<TMongoInstance> _databaseRunner;
+        private readonly IMigrationDatabaseService<TMongoInstance> _databaseService;
         private readonly IMongoDatabase _mongoDatabase;
 
-        public MigrationHostedService(IMigrationDatabaseRunner<TMongoInstance> databaseRunner, IMongoMigrationDatabase<TMongoInstance> database)
+        public MigrationHostedService(IMigrationDatabaseService<TMongoInstance> databaseService, IMongoMigrationDatabase<TMongoInstance> database)
         {
-            _databaseRunner = databaseRunner;
+            _databaseService = databaseService;
             _mongoDatabase = database.GetDatabase();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await CreateMigrationDocumentIndex(stoppingToken);
-
-            await _databaseRunner.RunMigrationsAsync();
+            await _databaseService.ExecuteAsync();
         }
 
         private async Task CreateMigrationDocumentIndex(CancellationToken stoppingToken)

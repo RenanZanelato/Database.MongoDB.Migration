@@ -15,44 +15,19 @@ namespace Database.MongoDB.Migration.Migration
         where TMongoInstance : IMongoMultiInstance
     {
         private readonly IMongoDatabase _mongoDatabase;
-        private readonly IMigrationValidator _validator;
         private readonly ILogger<MigrationDatabaseRunner<TMongoInstance>> _logger;
-        private readonly MigrationSettings<TMongoInstance> _settings;
         private readonly IMongoCollection<MigrationDocument> _collection;
 
         public MigrationDatabaseRunner(IMongoMigrationDatabase<TMongoInstance> database,
-            IOptions<MigrationSettings<TMongoInstance>> options,
-            IMigrationValidator validator,
             ILogger<MigrationDatabaseRunner<TMongoInstance>> logger)
         {
             _mongoDatabase = database.GetDatabase();
-            _validator = validator;
             _logger = logger;
-            _settings = options.Value;
             _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         }
 
-        public async Task RunMigrationsAsync()
+        public async Task RunMigrationsAsync(IEnumerable<BaseMigration> migrations, IEnumerable<MigrationDocument> appliedMigrations)
         {
-            var migrations = _settings.GetMigrationsFromAssembly();
-            if (!migrations.Any())
-            {
-                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
-                return;
-            }
-            
-            _validator.IsValidToMigrate(migrations);
-
-            var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
-            if (appliedMigrations.Any() && _validator.CompareLastedVersionApplied(migrations, appliedMigrations))
-            {
-                var migrationApplied = appliedMigrations
-                    .OrderBy(x => x.Version)
-                    .Last();
-                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Latested migration {migrationApplied.Name} version {migrationApplied.Version} already applied");
-                return;
-            }
-            
             var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
             await UpgradeMigrationsAsync(migrations, appliedVersions);
