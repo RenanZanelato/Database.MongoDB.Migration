@@ -9,7 +9,8 @@ using MongoDB.Driver;
 
 namespace Database.MongoDB.Migration.Service
 {
-    internal class MigrationDatabaseService<TMongoInstance> : IMigrationDatabaseService<TMongoInstance> where TMongoInstance : IMongoMultiInstance
+    internal class MigrationDatabaseService<TMongoInstance> : IMigrationDatabaseService<TMongoInstance>
+        where TMongoInstance : IMongoMultiInstance
     {
         private readonly IMongoDatabase _mongoDatabase;
         private readonly IMigrationValidator _validator;
@@ -31,19 +32,22 @@ namespace Database.MongoDB.Migration.Service
             _mongoDatabase = database.GetDatabase();
             _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         }
-        
+
         public async Task ExecuteAsync()
         {
-            var migrations = _settings.GetMigrationsFromAssembly();
-            if (!migrations.Any())
+            var migrationsToApply = _settings.GetMigrationsFromAssembly();
+            if (!migrationsToApply.Any())
             {
-                _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
+                _logger.LogInformation(
+                    $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Any migrations was found to apply");
                 return;
             }
-            _validator.IsValidToMigrate(migrations);
+
+            _validator.IsValidToMigrate(migrationsToApply);
 
             var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
-            if (appliedMigrations.Any() && _validator.CompareLastedVersionApplied(migrations, appliedMigrations))
+
+            if (appliedMigrations.Any() && _validator.CompareLastedVersionApplied(migrationsToApply, appliedMigrations))
             {
                 var migrationApplied = appliedMigrations
                     .OrderBy(x => x.Version)
@@ -51,8 +55,9 @@ namespace Database.MongoDB.Migration.Service
                 _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Latested migration {migrationApplied.Name} version {migrationApplied.Version} already applied");
                 return;
             }
+            
+            await _runner.RunMigrationsAsync(migrationsToApply, appliedMigrations);
 
-            await _runner.RunMigrationsAsync(migrations, appliedMigrations);
         }
     }
 }

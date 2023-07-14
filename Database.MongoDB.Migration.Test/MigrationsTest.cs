@@ -218,7 +218,7 @@ public class MigrationsTest
         persons.Should().HaveCount(0);
         foods.Should().HaveCount(0);
 
-        _loggerMock.Received(1).LogInformation($"[{databaseName}] Latested migration FoodSeed version 1.0.3 already applied");
+        _loggerMock.Received(1).LogInformation($"Latested migration FoodSeed version 1.0.3 already applied");
     }
     
     [Test]

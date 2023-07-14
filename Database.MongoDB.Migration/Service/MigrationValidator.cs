@@ -8,7 +8,7 @@ using Database.MongoDB.Migration.Migration;
 
 namespace Database.MongoDB.Migration.Service
 {
-    internal class MigrationValidator : IMigrationValidator
+    internal class MigrationValidator: IMigrationValidator
     {
         public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
         {
@@ -68,6 +68,11 @@ namespace Database.MongoDB.Migration.Service
             {
                 throw new WrongVersionException(migration.GetMigrationName(), migration.Version, value);
             }
+        }
+
+        public bool IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied, string databaseName) where TMigrations : BaseMigration
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
