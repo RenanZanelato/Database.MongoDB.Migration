@@ -22,13 +22,13 @@ namespace Database.MongoDB.Migration.Validator
             var latestedMigrationToApply = migrations
                 .Where(x => x.IsUp)
                 .OrderBy(x => x.Version)
-                .Last().Version;
+                .Last();
             
             var latestedMigrationApplied = migrationsApplied
                 .OrderBy(x => x.Version)
-                .Last().Version;
+                .Last();
 
-            return latestedMigrationToApply == latestedMigrationApplied;
+            return latestedMigrationToApply.Version == latestedMigrationApplied.Version;
         }
 
         private void ValidateRepeatedVersions<TMigrations>(IEnumerable<TMigrations> migrations)
