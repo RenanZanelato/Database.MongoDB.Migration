@@ -18,7 +18,6 @@ public class MigrationHostedServiceTest
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {
-        
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddEnvironmentVariables()
