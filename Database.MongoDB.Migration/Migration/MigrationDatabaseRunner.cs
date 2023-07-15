@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -17,24 +18,24 @@ namespace Database.MongoDB.Migration.Migration
         private readonly ILogger<MigrationDatabaseRunner<TMongoInstance>> _logger;
         private readonly IMongoCollection<MigrationDocument> _collection;
 
-        public MigrationDatabaseRunner(IMongoMigrationDatabaseService<TMongoInstance> database,
-            ILogger<MigrationDatabaseRunner<TMongoInstance>> logger)
+        public MigrationDatabaseRunner(IMongoMigrationDatabaseService<TMongoInstance> database, ILogger<MigrationDatabaseRunner<TMongoInstance>> logger)
         {
             _mongoDatabase = database.GetDatabase();
             _logger = logger;
             _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         }
 
-        public async Task RunMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> appliedMigrations) where TMigrations : BaseMigration
+        public async Task RunMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
+            IEnumerable<MigrationDocument> appliedMigrations, CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
             var appliedVersions = appliedMigrations.Select(doc => doc.Version);
 
-            await UpgradeMigrationsAsync(migrations, appliedVersions);
-            await DowngradeMigrationsAsync(migrations, appliedVersions);
+            await UpgradeMigrationsAsync(migrations, appliedVersions, cancellationToken);
+            await DowngradeMigrationsAsync(migrations, appliedVersions, cancellationToken);
         }
 
         private async Task UpgradeMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
-            IEnumerable<string> appliedVersions) where TMigrations : BaseMigration
+            IEnumerable<string> appliedVersions, CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
             var migrationsToUpgrade = migrations
                 .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp)
@@ -42,12 +43,12 @@ namespace Database.MongoDB.Migration.Migration
 
             foreach (var migration in migrationsToUpgrade)
             {
-                await UpgradeMigrationAsync(migration);
+                await UpgradeMigrationAsync(migration, cancellationToken);
             }
         }
 
         private async Task DowngradeMigrationsAsync<TMigrations>(IEnumerable<TMigrations> migrations,
-            IEnumerable<string> appliedVersions) where TMigrations : BaseMigration
+            IEnumerable<string> appliedVersions, CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
             var migrationsToDowngrade = migrations
                 .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp)
@@ -55,13 +56,14 @@ namespace Database.MongoDB.Migration.Migration
 
             foreach (var migration in migrationsToDowngrade)
             {
-                await DowngradeMigrationAsync(migration);
+                await DowngradeMigrationAsync(migration, cancellationToken);
             }
         }
 
-        private async Task UpgradeMigrationAsync<TMigrations>(TMigrations migration) where TMigrations : BaseMigration
+        private async Task UpgradeMigrationAsync<TMigrations>(TMigrations migration,
+            CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
-            await migration.UpAsync(_mongoDatabase);
+            await migration.UpAsync(_mongoDatabase, cancellationToken);
             var migrationDocument = new MigrationDocument()
             {
                 Id = Guid.NewGuid(),
@@ -69,15 +71,16 @@ namespace Database.MongoDB.Migration.Migration
                 Version = migration.Version,
                 CreatedDate = DateTime.UtcNow
             };
-            await _collection.InsertOneAsync(migrationDocument);
+            await _collection.InsertOneAsync(migrationDocument, cancellationToken: cancellationToken);
             _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Up Successfully");
         }
 
-        private async Task DowngradeMigrationAsync<TMigrations>(TMigrations migration) where TMigrations : BaseMigration
+        private async Task DowngradeMigrationAsync<TMigrations>(TMigrations migration,
+            CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
-            await migration.DownAsync(_mongoDatabase);
+            await migration.DownAsync(_mongoDatabase, cancellationToken);
             await _collection.DeleteOneAsync(
-                Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version));
+                Builders<MigrationDocument>.Filter.Where(x => x.Version == migration.Version), cancellationToken);
             _logger.LogInformation(
                 $"[{_mongoDatabase.DatabaseNamespace.DatabaseName}][{migration.GetMigrationName()}][{migration.Version}] Down Successfully");
         }

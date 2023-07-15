@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Database.MongoDB.Migration.Document;
 using Database.MongoDB.Migration.Exceptions;
@@ -34,7 +35,7 @@ namespace Database.MongoDB.Migration.Service
             _collection = _mongoDatabase.GetCollection<MigrationDocument>(MigrationExtensions.COLLECTION_NAME);
         }
 
-        public async Task ExecuteAsync()
+        public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
             var migrationsToApply = _settings.GetMigrationsFromAssembly();
             if (!migrationsToApply.Any())
@@ -48,7 +49,7 @@ namespace Database.MongoDB.Migration.Service
             {
                 _validator.ValidateMigrations(migrationsToApply);
 
-                var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
+                var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync(cancellationToken);
 
                 if (appliedMigrations.Any() &&
                     _validator.CompareLastedVersionApplied(migrationsToApply, appliedMigrations))
@@ -62,7 +63,7 @@ namespace Database.MongoDB.Migration.Service
                 }
 
                 _validator.ValidateMigrations(migrationsToApply, appliedMigrations);
-                await _runner.RunMigrationsAsync(migrationsToApply, appliedMigrations);
+                await _runner.RunMigrationsAsync(migrationsToApply, appliedMigrations, cancellationToken);
             }
             catch (MigrationException e)
             {

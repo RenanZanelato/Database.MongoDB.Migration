@@ -23,7 +23,7 @@ namespace Database.MongoDB.Migration.Service
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await CreateMigrationDocumentIndex(stoppingToken);
-            await _databaseService.ExecuteAsync();
+            await _databaseService.ExecuteAsync(stoppingToken);
         }
 
         private async Task CreateMigrationDocumentIndex(CancellationToken stoppingToken)
