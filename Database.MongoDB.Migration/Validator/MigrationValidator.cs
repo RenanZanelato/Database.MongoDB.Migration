@@ -22,16 +22,16 @@ namespace Database.MongoDB.Migration.Validator
             var appliedVersions = migrationsApplied.Select(x => x.Version);
             var migrationsToUpgrade = migrations
                 .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp);
-            var migrationsToDowngrade = migrations
-                .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp);
-
+            
             if (!migrationsApplied.Any() || !migrationsToUpgrade.Any())
             {
                 return;
             }
 
             var latestToUpgrade = migrationsToUpgrade.OrderByDescending(x => x.Version).FirstOrDefault();
-
+            
+            var migrationsToDowngrade = migrations
+                .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp);
             if (migrationsToDowngrade.Any())
             {
                 var latestToDowngrade = migrationsToDowngrade.OrderBy(x => x.Version).FirstOrDefault();
