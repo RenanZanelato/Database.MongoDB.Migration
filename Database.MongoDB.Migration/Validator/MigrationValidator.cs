@@ -10,13 +10,13 @@ namespace Database.MongoDB.Migration.Validator
 {
     internal class MigrationValidator : IMigrationValidator
     {
-        public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
+        public void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
         {
             ValidateSemanticVersions(migrations);
             ValidateRepeatedVersions(migrations);
         }
 
-        public void IsValidToMigrate<TMigrations>(IEnumerable<TMigrations> migrations,
+        public void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations,
             IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
         {
             var appliedVersions = migrationsApplied.Select(x => x.Version);

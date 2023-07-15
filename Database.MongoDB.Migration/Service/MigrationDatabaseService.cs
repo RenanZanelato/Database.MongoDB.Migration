@@ -42,7 +42,7 @@ namespace Database.MongoDB.Migration.Service
                 return;
             }
 
-            _validator.IsValidToMigrate(migrationsToApply);
+            _validator.ValidateMigrations(migrationsToApply);
 
             var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync();
 
@@ -54,7 +54,7 @@ namespace Database.MongoDB.Migration.Service
                 _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Latested migration {migrationApplied.Name} version {migrationApplied.Version} already applied");
                 return;
             }
-            _validator.IsValidToMigrate(migrationsToApply, appliedMigrations);
+            _validator.ValidateMigrations(migrationsToApply, appliedMigrations);
             await _runner.RunMigrationsAsync(migrationsToApply, appliedMigrations);
 
         }
