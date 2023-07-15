@@ -49,7 +49,8 @@ public class MigrationsExceptionTest
     [Test]
     public async Task Should_Throw_RepeatedVersionException_When_DuplicateMigrations_Found()
     {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
 
         var serviceCollection = new ServiceCollection()
             .AddScoped(_ => _loggerFactory)
@@ -62,17 +63,22 @@ public class MigrationsExceptionTest
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
         var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
-        var action = async () => await service.ExecuteAsync();
+        await service.ExecuteAsync();
 
-        await action.Should().ThrowAsync<RepeatedVersionException>()
-            .WithMessage("Migrations FoodSeed, PersonSeed has repeated version 3.0.1");
+        _loggerMock.ReceivedCalls().Should().NotBeEmpty().And.HaveCount(1);
+        var logInput = _loggerMock.ReceivedCalls().First().GetArguments();
+        logInput[0].Should().Be(LogLevel.Error);
+        logInput[2].ToString().Should().Be($"[{databaseName}] Failed to apply migration");
+        var expectedMessage = "Migrations FoodSeed, PersonSeed has repeated version 3.0.1.x";
+        logInput[3].Should().BeEquivalentTo(Arg.Is<RepeatedVersionException>(x => x.Message == expectedMessage));
     }
     
     [Test]
     public async Task Should_Throw_WrongSemanticVersionException_When_Migration_With_Invalid_Semantic_Version_Found()
     {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
-
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
+        
         var serviceCollection = new ServiceCollection()
             .AddScoped(_ => _loggerFactory)
             .AddScoped(typeof(ILogger<>), typeof(Logger<>))
@@ -84,17 +90,22 @@ public class MigrationsExceptionTest
         
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
         var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
-        var action = async () => await service.ExecuteAsync();
+        await service.ExecuteAsync();
 
-        await action.Should().ThrowAsync<WrongSemanticVersionException>()
-            .WithMessage($"Migration FoodPriceSeed with version 4.0.1.0 is in wrong format, the correct format should be x.x.x");
+        _loggerMock.ReceivedCalls().Should().NotBeEmpty().And.HaveCount(1);
+        var logInput = _loggerMock.ReceivedCalls().First().GetArguments();
+        logInput[0].Should().Be(LogLevel.Error);
+        logInput[2].ToString().Should().Be($"[{databaseName}] Failed to apply migration");
+        var expectedMessage = "Migration FoodPriceSeed with version 4.0.1.0 is in wrong format, the correct format should be x.x.x";
+        logInput[3].Should().BeEquivalentTo(Arg.Is<WrongSemanticVersionException>(x => x.Message == expectedMessage));
     }
     
     [Test]
     public async Task Should_Throw_WrongVersionException_When_Migration_With_Invalid_Version_Found()
     {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
-
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
+        
         var serviceCollection = new ServiceCollection()
             .AddScoped(_ => _loggerFactory)
             .AddScoped(typeof(ILogger<>), typeof(Logger<>))
@@ -106,17 +117,22 @@ public class MigrationsExceptionTest
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
         var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
-        var action = async () => await service.ExecuteAsync();
+        await service.ExecuteAsync();
 
-        await action.Should().ThrowAsync<WrongVersionException>()
-            .WithMessage($"Migration FoodPriceSeed with version 4.B0.1 has wrong path B0. All parts need to be a number");
+        _loggerMock.ReceivedCalls().Should().NotBeEmpty().And.HaveCount(1);
+        var logInput = _loggerMock.ReceivedCalls().First().GetArguments();
+        logInput[0].Should().Be(LogLevel.Error);
+        logInput[2].ToString().Should().Be($"[{databaseName}] Failed to apply migration");
+        var expectedMessage = "Migration FoodPriceSeed with version 4.B0.1 has wrong path B0. All parts need to be a number";
+        logInput[3].Should().BeEquivalentTo(Arg.Is<WrongVersionException>(x => x.Message == expectedMessage));
     }
     
     [Test]
     public async Task Should_Throw_AppliedVersionException_When_Migration_With_Lower_Or_Equal_Version_Found()
     {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
-
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
+        
         var serviceCollection = new ServiceCollection()
             .AddScoped(_ => _loggerFactory)
             .AddScoped(typeof(ILogger<>), typeof(Logger<>))
@@ -141,17 +157,22 @@ public class MigrationsExceptionTest
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
         var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
-        var action = async () => await service.ExecuteAsync();
+        await service.ExecuteAsync();
 
-        await action.Should().ThrowAsync<AppliedVersionException>()
-            .WithMessage($"You can't apply FoodSeed on version 1.0.3, Your version need to be greater than 0.0.1");
+        _loggerMock.ReceivedCalls().Should().NotBeEmpty().And.HaveCount(1);
+        var logInput = _loggerMock.ReceivedCalls().First().GetArguments();
+        logInput[0].Should().Be(LogLevel.Error);
+        logInput[2].ToString().Should().Be($"[{databaseName}] Failed to apply migration");
+        var expectedMessage = "You can't apply FoodSeed on version 1.0.3, Your version need to be greater than 0.0.1";
+        logInput[3].Should().BeEquivalentTo(Arg.Is<AppliedVersionException>(x => x.Message == expectedMessage));
     }
     
     [Test]
     public async Task Should_Throw_A_Exception_When_Try_To_Upgrade_When_Exist_A_Downgrade_Version_Less_Than_Upgrade_Version()
     {
-        var database = _client.GetDatabase(Guid.NewGuid().ToString());
-
+        var databaseName = Guid.NewGuid().ToString();
+        var database = _client.GetDatabase(databaseName);
+        
         var serviceCollection = new ServiceCollection()
             .AddScoped(_ => _loggerFactory)
             .AddScoped(typeof(ILogger<>), typeof(Logger<>))
@@ -176,9 +197,13 @@ public class MigrationsExceptionTest
 
         await using var serviceProvider = serviceCollection.BuildServiceProvider();
         var service = serviceProvider.GetRequiredService<IMigrationDatabaseService<IMongoMultiInstance>>();
-        var action = async () => await service.ExecuteAsync();
+        await service.ExecuteAsync();
 
-        await action.Should().ThrowAsync<DowngradeVersionException>()
-            .WithMessage($"You need first apply a downgrade on FoodPriceSeed version 4.0.4 to before apply a upgrade on FoodSeed version 5.0.0");
+        _loggerMock.ReceivedCalls().Should().NotBeEmpty().And.HaveCount(1);
+        var logInput = _loggerMock.ReceivedCalls().First().GetArguments();
+        logInput[0].Should().Be(LogLevel.Error);
+        logInput[2].ToString().Should().Be($"[{databaseName}] Failed to apply migration");
+        var expectedMessage = "You need first apply a downgrade on FoodPriceSeed version 4.0.4 to before apply a upgrade on FoodSeed version 5.0.0";
+        logInput[3].Should().BeEquivalentTo(Arg.Is<AppliedVersionException>(x => x.Message == expectedMessage));
     }
 }
