@@ -8,6 +8,6 @@ namespace Database.MongoDB.Migration.Interfaces
     {
         void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration;
         void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration;
-        bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration;
+        bool ValidateLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations, IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration;
     }
 }

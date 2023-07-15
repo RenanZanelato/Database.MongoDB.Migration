@@ -43,7 +43,7 @@ namespace Database.MongoDB.Migration.Validator
             ValidateAppliedVersion(latestToUpgrade, latestApplied);
         }
         
-        public bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations,
+        public bool ValidateLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations,
             IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
         {
             var latestMigrationToApply = migrations

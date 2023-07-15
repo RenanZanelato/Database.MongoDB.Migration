@@ -52,7 +52,7 @@ namespace Database.MongoDB.Migration.Service
                 var appliedMigrations = await _collection.Find(Builders<MigrationDocument>.Filter.Empty).ToListAsync(cancellationToken);
 
                 if (appliedMigrations.Any() &&
-                    _validator.CompareLastedVersionApplied(migrationsToApply, appliedMigrations))
+                    _validator.ValidateLastedVersionApplied(migrationsToApply, appliedMigrations))
                 {
                     var migrationApplied = appliedMigrations
                         .OrderBy(x => x.Version)
