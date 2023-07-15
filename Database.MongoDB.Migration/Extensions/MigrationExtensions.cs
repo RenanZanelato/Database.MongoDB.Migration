@@ -13,21 +13,13 @@ namespace Database.MongoDB.Migration.Extensions
         internal static IEnumerable<BaseMigration> GetMigrationsFromAssembly<TMongoInstance>(this MigrationSettings<TMongoInstance> settings) 
             where TMongoInstance : IMongoMultiInstance
         {
-            var migrationTypes = (settings.MigrationAssembly ?? Assembly.GetExecutingAssembly()).GetTypes()
-                .Where(t => t.IsSubclassOf(typeof(BaseMigration)) && !t.IsAbstract);
+            var migrationTypes = (settings.MigrationAssembly ?? Assembly.GetExecutingAssembly())
+                .GetTypes()
+                .Where(IsValidMigrationType(settings.Namespace))
+                .ToList();
 
-            if (!string.IsNullOrEmpty(settings.Namespace))
-            {
-                migrationTypes = migrationTypes.Where(x => x.Namespace == settings.Namespace);
-            }
-
-            foreach (var type in migrationTypes)
-            {
-                if (Activator.CreateInstance(type) is BaseMigration migration)
-                {
-                    yield return migration;
-                }
-            }
+            return migrationTypes.Select(Activator.CreateInstance)
+                .OfType<BaseMigration>();
         }
 
         internal static string GetMigrationName(this BaseMigration migration)
@@ -45,5 +37,11 @@ namespace Database.MongoDB.Migration.Extensions
             where TMigrations : BaseMigration
         => migrations
             .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp);
+        
+        private static Func<Type, bool> IsValidMigrationType(string migrationNamespace) =>
+            t => t.IsSubclassOf(typeof(BaseMigration)) &&
+                 !t.IsAbstract &&
+                 !string.IsNullOrEmpty(migrationNamespace) &&
+                 t.Namespace == migrationNamespace;
     }
 }

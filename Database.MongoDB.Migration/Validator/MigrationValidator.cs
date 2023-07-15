@@ -91,15 +91,14 @@ namespace Database.MongoDB.Migration.Validator
         private void ValidateRepeatedVersions<TMigrations>(IEnumerable<TMigrations> migrations)
             where TMigrations : BaseMigration
         {
-            var groupedMigrations = migrations.GroupBy(x => x.Version);
+            var repeatedVersions = migrations
+                .GroupBy(x => x.Version)
+                .Where(g => g.Count() > 1)
+                .Select(g => new { Names = g.Select(x => x.GetMigrationName()), Version = g.Key });
 
-            foreach (var migration in groupedMigrations)
+            if (repeatedVersions.Any())
             {
-                if (migration.Count() > 1)
-                {
-                    throw new RepeatedVersionException(migration.Select(x => x.GetMigrationName()),
-                        migration.FirstOrDefault().Version);
-                }
+                throw new RepeatedVersionException(repeatedVersions.SelectMany(x => x.Names), repeatedVersions.First().Version);
             }
         }
 
