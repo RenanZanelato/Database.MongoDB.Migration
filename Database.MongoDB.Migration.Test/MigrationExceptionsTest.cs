@@ -47,7 +47,7 @@ public class MigrationsExceptionTest
     }
 
     [Test]
-    public async Task Should_Log_WrongSemanticVersionException_When_Migration_With_Invalid_Semantic_Version_Found()
+    public async Task Should_Log_RepeatedVersionException_When_DuplicateMigrations_Found()
     {
         var databaseName = Guid.NewGuid().ToString();
         var database = _client.GetDatabase(databaseName);
