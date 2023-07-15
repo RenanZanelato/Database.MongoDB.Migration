@@ -66,11 +66,6 @@ jobs:
         if: success()
         run: dotnet pack --configuration Release --version "${{ env.PACKAGE_VERSION }}"
 
-      - name: Publish NuGet package
-        if: false
-        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }}
-          --source "https://api.nuget.org/v3/index.json"
-          
       - name: Down Docker
         run: |
           docker-compose down
