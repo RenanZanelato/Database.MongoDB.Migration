@@ -54,7 +54,7 @@ namespace Database.MongoDB.Migration.Service
                 _logger.LogInformation($"[{_mongoDatabase.DatabaseNamespace.DatabaseName}] Latested migration {migrationApplied.Name} version {migrationApplied.Version} already applied");
                 return;
             }
-            
+            _validator.IsValidToMigrate(migrationsToApply, appliedMigrations);
             await _runner.RunMigrationsAsync(migrationsToApply, appliedMigrations);
 
         }

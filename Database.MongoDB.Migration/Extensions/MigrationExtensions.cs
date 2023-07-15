@@ -32,5 +32,8 @@ namespace Database.MongoDB.Migration.Extensions
 
         internal static string GetMigrationName(this BaseMigration migration)
             => migration.GetType().Name;
+        
+        internal static int GetVersion(this string migrationVersion)
+            => int.Parse(migrationVersion.Replace(".", ""));
     }
 }
