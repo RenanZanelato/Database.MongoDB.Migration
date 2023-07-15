@@ -3,7 +3,7 @@
     <Copyright>Renan Zanelato</Copyright>
     <Company>Renan Zanelato</Company>
     <Authors>Renan Zanelato</Authors>
-    <Version>1.$(GITHUB_RUN_NUMBER).0</Version>
+    <Version>2.$(GITHUB_RUN_NUMBER).0</Version>
     <IsPackable>true</IsPackable>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0</TargetFrameworks>
     <PackageReadmeFile>README.md</PackageReadmeFile>
