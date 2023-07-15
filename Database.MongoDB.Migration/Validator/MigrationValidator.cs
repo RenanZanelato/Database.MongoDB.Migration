@@ -10,46 +10,39 @@ namespace Database.MongoDB.Migration.Validator
 {
     internal class MigrationValidator : IMigrationValidator
     {
-        public void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations) where TMigrations : BaseMigration
+        public void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations)
+            where TMigrations : BaseMigration
         {
             ValidateSemanticVersions(migrations);
             ValidateRepeatedVersions(migrations);
         }
 
         public void ValidateMigrations<TMigrations>(IEnumerable<TMigrations> migrations,
-            IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
+            IEnumerable<MigrationDocument> migrationsApplied)
+            where TMigrations : BaseMigration
         {
             var appliedVersions = migrationsApplied.Select(x => x.Version);
-            var migrationsToUpgrade = migrations
-                .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp);
-            
+            var migrationsToUpgrade = migrations.GetMigrationsToUpgrade(appliedVersions);
+
             if (!migrationsApplied.Any() || !migrationsToUpgrade.Any())
             {
                 return;
             }
 
             var latestToUpgrade = migrationsToUpgrade.OrderByDescending(x => x.Version).FirstOrDefault();
-            
-            var migrationsToDowngrade = migrations
-                .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp);
-            if (migrationsToDowngrade.Any())
-            {
-                var latestToDowngrade = migrationsToDowngrade.OrderBy(x => x.Version).FirstOrDefault();
-                if (latestToUpgrade.Version.GetVersion() >= latestToDowngrade.Version.GetVersion())
-                {
-                    throw new DowngradeVersionException(latestToDowngrade.GetMigrationName(), latestToDowngrade.Version,
-                        latestToUpgrade.GetMigrationName(), latestToUpgrade.Version);
-                }
-            }
+
+            var migrationsToDowngrade = migrations.GetMigrationsToDowngrade(appliedVersions);
 
             var latestApplied = migrationsApplied.OrderByDescending(x => x.Version).FirstOrDefault();
-            if (latestApplied.Version.GetVersion() <= latestToUpgrade.Version.GetVersion())
-            {
-                throw new AppliedVersionException(latestToUpgrade.Version, latestToUpgrade.GetMigrationName(),
-                    latestApplied.Version);
-            }
-        }
 
+            if (migrationsToDowngrade.Any())
+            {
+                ValidateDowngradeVersions(migrationsToDowngrade, latestToUpgrade, latestApplied);
+            }
+
+            ValidateAppliedVersion(latestToUpgrade, latestApplied);
+        }
+        
         public bool CompareLastedVersionApplied<TMigrations>(IEnumerable<TMigrations> migrations,
             IEnumerable<MigrationDocument> migrationsApplied) where TMigrations : BaseMigration
         {
@@ -65,6 +58,36 @@ namespace Database.MongoDB.Migration.Validator
             return latestMigrationToApply.Version == latestMigrationApplied.Version;
         }
 
+        private void ValidateDowngradeVersions<TMigrations>(IEnumerable<TMigrations> migrationsToDowngrade,
+            TMigrations latestToUpgrade, MigrationDocument latestApplied)
+            where TMigrations : BaseMigration
+        {
+            var latestToDowngrade = migrationsToDowngrade.OrderBy(x => x.Version).FirstOrDefault();
+            if (latestToUpgrade.Version.GetVersion() >= latestToDowngrade.Version.GetVersion())
+            {
+                throw new DowngradeVersionException(latestToDowngrade.GetMigrationName(), latestToDowngrade.Version,
+                    latestToUpgrade.GetMigrationName(), latestToUpgrade.Version);
+            }
+
+            var greaterDowngrade = migrationsToDowngrade.OrderByDescending(x => x.Version).FirstOrDefault();
+            if (latestApplied.Version.GetVersion() > greaterDowngrade.Version.GetVersion())
+            {
+                throw new DowngradeAppliedVersionException(greaterDowngrade.GetMigrationName(),
+                    greaterDowngrade.Version,
+                    latestApplied.Name, latestApplied.Version);
+            }
+        }
+
+        private void ValidateAppliedVersion<TMigrations>(TMigrations latestToUpgrade, MigrationDocument latestApplied)
+            where TMigrations : BaseMigration
+        {
+            if (latestApplied.Version.GetVersion() <= latestToUpgrade.Version.GetVersion())
+            {
+                throw new AppliedVersionException(latestToUpgrade.Version, latestToUpgrade.GetMigrationName(),
+                    latestApplied.Version);
+            }
+        }
+        
         private void ValidateRepeatedVersions<TMigrations>(IEnumerable<TMigrations> migrations)
             where TMigrations : BaseMigration
         {

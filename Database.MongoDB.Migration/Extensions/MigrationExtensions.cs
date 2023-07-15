@@ -35,5 +35,15 @@ namespace Database.MongoDB.Migration.Extensions
         
         internal static int GetVersion(this string migrationVersion)
             => int.Parse(migrationVersion.Replace(".", ""));
+        
+        internal static IEnumerable<TMigrations> GetMigrationsToUpgrade<TMigrations>(this IEnumerable<TMigrations> migrations, IEnumerable<string> appliedVersions)
+            where TMigrations : BaseMigration
+        => migrations
+            .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp);
+        
+        internal static IEnumerable<TMigrations> GetMigrationsToDowngrade<TMigrations>(this IEnumerable<TMigrations> migrations, IEnumerable<string> appliedVersions)
+            where TMigrations : BaseMigration
+        => migrations
+            .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp);
     }
 }

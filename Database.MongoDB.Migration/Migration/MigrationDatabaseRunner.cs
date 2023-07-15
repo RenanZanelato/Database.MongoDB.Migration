@@ -38,7 +38,7 @@ namespace Database.MongoDB.Migration.Migration
             IEnumerable<string> appliedVersions, CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
             var migrationsToUpgrade = migrations
-                .Where(m => !appliedVersions.Contains(m.Version) && m.IsUp)
+                .GetMigrationsToUpgrade(appliedVersions)
                 .OrderBy(m => m.Version);
 
             foreach (var migration in migrationsToUpgrade)
@@ -51,7 +51,7 @@ namespace Database.MongoDB.Migration.Migration
             IEnumerable<string> appliedVersions, CancellationToken cancellationToken = default) where TMigrations : BaseMigration
         {
             var migrationsToDowngrade = migrations
-                .Where(m => appliedVersions.Contains(m.Version) && !m.IsUp)
+                .GetMigrationsToDowngrade(appliedVersions)
                 .OrderByDescending(m => m.Version);
 
             foreach (var migration in migrationsToDowngrade)
