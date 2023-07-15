@@ -1,14 +1,14 @@
----
 name: Build, Test, and Publish with Coverage
+
 on:
   push:
     branches:
       - main
-env:
-  MAJOR_VERSION: 3
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -20,17 +20,15 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: '6.0.x'
 
       - name: Build Project
         run: |
           dotnet build --configuration Release
 
       - name: Run Code Coverage
-        run: >
-          dotnet test --configuration Release --no-build --collect:"XPlat Code
-          Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-          /p:CoverletOutput=./TestResults/Coverage/
+        run: |
+          dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./TestResults/Coverage/
 
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v2
@@ -38,33 +36,13 @@ jobs:
           name: coverage-report
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
-      - name: Check and increment version numbers
-        if: success()
-        id: version_control
-        run: >
-          if [ "${{ env.MAJOR_VERSION }}" != "${{ env.MAJOR_VERSION_PREVIOUS }}" ];
-          then
-            echo "::set-env name=MINOR_VERSION::0"
-            echo "::set-env name=PATCH_VERSION::0"
-          else
-            echo "::set-env name=MINOR_VERSION::${{ env.MINOR_VERSION + 1 }}"
-            echo "::set-env name=PATCH_VERSION::${{ env.PATCH_VERSION + 1 }}"
-          fi
-
-      - name: Set NuGet package version
-        if: success()
-        id: set_package_version
-        run: >
-          PACKAGE_VERSION="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{
-          env.PATCH_VERSION }}"
-
-          echo "Package version: $PACKAGE_VERSION"
-
-          echo "::set-env name=PACKAGE_VERSION::$PACKAGE_VERSION"
-
       - name: Pack NuGet package
         if: success()
-        run: dotnet pack --configuration Release --version "${{ env.PACKAGE_VERSION }}"
+        run: dotnet pack --configuration Release
+
+      - name: Publish NuGet package
+        if: success()
+        run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
 
       - name: Down Docker
         run: |
