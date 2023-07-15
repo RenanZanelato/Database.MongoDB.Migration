@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  MAJOR_VERSION: 3
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -36,12 +39,32 @@ jobs:
           name: coverage-report
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
+      - name: Check and increment version numbers
+        if: success()
+        id: version_control
+        run: |
+            if [ "${{ env.MAJOR_VERSION }}" != "${{ env.MAJOR_VERSION_PREVIOUS }}" ]; then
+              echo "::set-env name=MINOR_VERSION::0"
+              echo "::set-env name=PATCH_VERSION::0"
+            else
+              echo "::set-env name=MINOR_VERSION::${{ env.MINOR_VERSION + 1 }}"
+              echo "::set-env name=PATCH_VERSION::${{ env.PATCH_VERSION + 1 }}"
+            fi
+
+      - name: Set NuGet package version
+        if: success()
+        id: set_package_version
+        run: |
+          PACKAGE_VERSION="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "::set-env name=PACKAGE_VERSION::$PACKAGE_VERSION"
+
       - name: Pack NuGet package
         if: success()
-        run: dotnet pack --configuration Release
+        run: dotnet pack --configuration Release --version "${{ env.PACKAGE_VERSION }}"
 
       - name: Publish NuGet package
-        if: success()
+        if: false
         run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json"
 
       - name: Down Docker
