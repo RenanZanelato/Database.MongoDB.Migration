@@ -54,12 +54,13 @@ jobs:
             PATCH_VERSION=0
           fi
           
-          PACKAGE_VERSION="$MAJOR_VERSION.$MINOR_VERSION.$PATCH_VERSION"
-          echo "::set-env name=PACKAGE_VERSION::$PACKAGE_VERSION"
+          echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
+          echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
+          echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
 
       - name: Pack NuGet package
         if: success()
-        run: dotnet pack --configuration Release --version "${{ env.PACKAGE_VERSION }}"
+        run: dotnet pack --configuration Release --version "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
 
       - name: Publish NuGet package
         if: false
