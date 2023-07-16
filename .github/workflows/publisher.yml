@@ -46,10 +46,9 @@ jobs:
             echo "::set-env name=MINOR_VERSION::0"
             echo "::set-env name=PATCH_VERSION::0"
           else
-            echo "::set-env name=MINOR_VERSION::${{ env.MINOR_VERSION + 1 }}"
-            echo "::set-env name=PATCH_VERSION::${{ env.PATCH_VERSION + 1 }}"
+            echo "::set-env name=MINOR_VERSION ${{ add(env.MINOR_VERSION, 1) }}"
+            echo "::set-env name=PATCH_VERSION ${{ add(env.PATCH_VERSION, 1) }}"
           fi
-
 
       - name: Set NuGet package version
         if: success()
