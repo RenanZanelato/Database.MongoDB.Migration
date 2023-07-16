@@ -57,6 +57,7 @@ jobs:
           echo "MAJOR_VERSION=$MAJOR_VERSION" >> $GITHUB_ENV
           echo "MINOR_VERSION=$MINOR_VERSION" >> $GITHUB_ENV
           echo "PATCH_VERSION=$PATCH_VERSION" >> $GITHUB_ENV
+          echo "${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}";
 
       - name: Pack NuGet package
         if: success()
