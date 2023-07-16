@@ -44,17 +44,16 @@ jobs:
         run: |
           if [ "${{ env.MAJOR_VERSION }}" != "${{ env.MAJOR_VERSION_PREVIOUS }}" ]; then
             echo "::set-env name=MINOR_VERSION::0"
-            echo "::set-env name=PATCH_VERSION::0"
           else
-            echo "::set-env name=MINOR_VERSION ${{ add(env.MINOR_VERSION, 1) }}"
-            echo "::set-env name=PATCH_VERSION ${{ add(env.PATCH_VERSION, 1) }}"
+            MINOR_VERSION=$((env.MINOR_VERSION + 1))
+            echo "::set-env name=MINOR_VERSION::$MINOR_VERSION"
           fi
 
       - name: Set NuGet package version
         if: success()
         id: set_package_version
         run: |
-          PACKAGE_VERSION="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ env.PATCH_VERSION }}"
+          PACKAGE_VERSION="${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.0"
           echo "Package version: $PACKAGE_VERSION"
           echo "::set-env name=PACKAGE_VERSION::$PACKAGE_VERSION"
 
