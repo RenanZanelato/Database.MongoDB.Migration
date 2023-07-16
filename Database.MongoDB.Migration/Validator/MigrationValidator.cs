@@ -30,15 +30,7 @@ namespace Database.MongoDB.Migration.Validator
             }
 
             var latestToUpgrade = migrationsToUpgrade.OrderByDescending(x => x.Version).FirstOrDefault();
-
-            var migrationsToDowngrade = migrations.GetMigrationsToDowngrade(appliedVersions);
-
             var latestApplied = migrationsApplied.OrderByDescending(x => x.Version).FirstOrDefault();
-
-            if (migrationsToDowngrade.Any())
-            {
-                ValidateDowngradeVersions(migrationsToDowngrade, latestToUpgrade, latestApplied);
-            }
 
             ValidateAppliedVersion(latestToUpgrade, latestApplied);
         }
@@ -56,26 +48,6 @@ namespace Database.MongoDB.Migration.Validator
                 .Last();
 
             return latestMigrationToApply.Version == latestMigrationApplied.Version;
-        }
-
-        private void ValidateDowngradeVersions<TMigrations>(IEnumerable<TMigrations> migrationsToDowngrade,
-            TMigrations latestToUpgrade, MigrationDocument latestApplied)
-            where TMigrations : BaseMigration
-        {
-            var latestToDowngrade = migrationsToDowngrade.OrderBy(x => x.Version).FirstOrDefault();
-            if (latestToUpgrade.Version.GetVersion() >= latestToDowngrade.Version.GetVersion())
-            {
-                throw new DowngradeVersionException(latestToDowngrade.GetMigrationName(), latestToDowngrade.Version,
-                    latestToUpgrade.GetMigrationName(), latestToUpgrade.Version);
-            }
-
-            var greaterDowngrade = migrationsToDowngrade.OrderByDescending(x => x.Version).FirstOrDefault();
-            if (latestApplied.Version.GetVersion() > greaterDowngrade.Version.GetVersion())
-            {
-                throw new DowngradeAppliedVersionException(greaterDowngrade.GetMigrationName(),
-                    greaterDowngrade.Version,
-                    latestApplied.Name, latestApplied.Version);
-            }
         }
 
         private void ValidateAppliedVersion<TMigrations>(TMigrations latestToUpgrade, MigrationDocument latestApplied)
