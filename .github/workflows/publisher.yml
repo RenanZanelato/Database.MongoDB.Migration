@@ -38,17 +38,18 @@ jobs:
           name: coverage-report
           path: ./Database.MongoDB.Migration.Test/TestResults/Coverage/
 
-       - name: Check and increment version numbers
+      - name: Check and increment version numbers
         if: success()
         id: version_control
         run: |
-            if [ "${{ env.MAJOR_VERSION }}" != "${{ env.MAJOR_VERSION_PREVIOUS }}" ]; then
-              echo "::set-env name=MINOR_VERSION::0"
-              echo "::set-env name=PATCH_VERSION::0"
-            else
-              echo "::set-env name=MINOR_VERSION::${{ env.MINOR_VERSION + 1 }}"
-              echo "::set-env name=PATCH_VERSION::${{ env.PATCH_VERSION + 1 }}"
-            fi
+          if [ "${{ env.MAJOR_VERSION }}" != "${{ env.MAJOR_VERSION_PREVIOUS }}" ]; then
+            echo "::set-env name=MINOR_VERSION::0"
+            echo "::set-env name=PATCH_VERSION::0"
+          else
+            echo "::set-env name=MINOR_VERSION::${{ env.MINOR_VERSION + 1 }}"
+            echo "::set-env name=PATCH_VERSION::${{ env.PATCH_VERSION + 1 }}"
+          fi
+
 
       - name: Set NuGet package version
         if: success()
